@@ -1,6 +1,9 @@
 import os
 import sys
+import json
+import pandas as pd
 from pathlib import Path
+from prefect import task
 
 
 # TODO: Add support for 'all' flag.
@@ -20,6 +23,8 @@ def load_clinc_data(all: bool=False) -> Dict:
 
     paths = {f[:f.find('.')]:oos_data_dir/f for f in files}
 
+    print(paths)
+
     for filen, path in paths.items():
         with open(path, "r") as data_f:
             ext = str(path)[-5:]
@@ -35,7 +40,6 @@ def load_clinc_data(all: bool=False) -> Dict:
     return data
 
 
-@task
 def clinc_json_to_df(loaded_json):
     """
     Convert a particular CLINC JSON file to a dict of DFs.
