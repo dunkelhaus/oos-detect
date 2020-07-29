@@ -1,15 +1,14 @@
 import os
 import sys
 import pandas as pd
-from typing import Dict
-from typing import List
 from pathlib import Path
-from typing import Tuple
-from typing import Iterator
 from dataload import clinc_json_to_df
 from allennlp.data.tokenizers import Token
+from allennlp.data import DatasetReader, instance
+from allennlp.data.tokenizers import Token, Tokenizer
 from allennlp.data.token_indexers import TokenIndexer
-from allennlp.data.dataset_readers import DatasetReader
+from allennlp.data.fields import LabelField, TextField
+from typing import Dict, List, Tuple, Iterable, Iterator
 from allennlp.data.tokenizers import PretrainedTransformerTokenizer
 from allennlp.data.token_indexers import PretrainedTransformerTokenIndexer
 
@@ -44,7 +43,7 @@ class DataFullReader(DatasetReader):
 
         if tags:
             label_field = SequenceLabelField(labels=tags, sequence_field=sentence_field)
-            fields["labels"] = label_field
+            fields["label"] = label_field
 
         return Instance(fields)
 
