@@ -20,11 +20,14 @@ class SingleLayerLSTMClassifier(Model):
         self.embedder = embedder
         self.encoder = encoder
         num_labels = vocab.get_vocab_size("labels")
-        self.classifier = torch.nn.Linear(encoder.get_output_dim(), num_labels)
+        self.classifier = torch.nn.Linear(
+            encoder.get_output_dim(),
+            num_labels
+        )
         self.accuracy = CategoricalAccuracy()
 
     def forward(self,
-                text: TextFieldTensors,
+                sentence: TextFieldTensors,
                 label: torch.Tensor = None) -> Dict[str, torch.Tensor]:
         # Shape: (batch_size, num_tokens, embedding_dim)
         embedded_text = self.embedder(text)
