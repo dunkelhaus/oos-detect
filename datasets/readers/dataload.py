@@ -3,11 +3,10 @@ import sys
 import json
 import pandas as pd
 from pathlib import Path
-from prefect import task
+from utilities.exceptions import DataSetPortionMissingError
 
 
 # TODO: Add support for 'all' flag.
-@task
 def load_clinc_data(all: bool=False) -> Dict:
     """
     Load OOS data from DATA_DIR into a Dict of pd.DataFrames.
@@ -40,17 +39,53 @@ def load_clinc_data(all: bool=False) -> Dict:
     return data
 
 
-def clinc_json_to_df(loaded_json):
+def clinc_json_to_df(
+        loaded_json: json,
+        portions: List=None
+) -> Dict[str, pd.DataFrame]:
     """
     Convert a particular CLINC JSON file to a dict of DFs.
     :param loaded_json: JSON object - must be loaded using json.load.
-    :return dfs: A dict of DataFrames, containing data in the provided
-                    JSON.
+    :param portions: The portions of the dataset requested; train,
+            dev, etc.
+    :return dfs: A dict of DataFrames, containing data in the
+            provided JSON.
     """
+    # Load subset of portions of the dataset, else all of them.
+    if portions:
+        subset = portions
+    else:
+        subset = loaded_json.items()
+
+    # Submethod verifies the portion exists, etc.
     dfs = {
-        key:pd.DataFrame(value, columns=['text_cols', 'label_cols'])
+        key:clinc_json_portion_to_df(loaded_json, value)
         for key, value
-        in loaded_json.items()
+        in subset
     }
 
     return dfs
+
+
+def clinc_json_portion_to_df(
+        loaded_json: json,
+        portion: str
+) -> pd.DataFrame:
+    """
+    Convert a particular CLINC JSON file to a dict of DFs.
+    :param loaded_json: JSON object - must be loaded using json.load.
+    :param portion: The portion of the dataset requested; train,
+            dev, etc.
+    :return df: A DF containing the requested portion of data.
+    """
+    try:
+        df = pd.DataFrame(
+            loaded_json[portion],
+            columns=['text_cols', 'label_cols']
+        )
+    except KeyError as ke:
+        print(f"Incorrect portion name: {portion}.")
+        print(f"Error: {ke!r}.")
+        raise DataSetPortionMissingError()
+
+    return df
