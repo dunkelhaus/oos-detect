@@ -19,7 +19,6 @@ class DataFullReader(DatasetReader):
     Read the data_full json dataset from the CLINC OOS data.
     """
 
-    @task
     def __init__(
             self,
             token_indexers: Dict[str, TokenIndexer] = None
