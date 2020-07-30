@@ -1,5 +1,6 @@
 import os
 import sys
+import logging
 import pandas as pd
 from pathlib import Path
 from utilities.exceptions import ReqdFileNotInSetError
@@ -13,9 +14,13 @@ from typing import Dict, List, Tuple, Iterable, Iterator
 from allennlp.data.tokenizers import PretrainedTransformerTokenizer
 from allennlp.data.token_indexers import PretrainedTransformerTokenIndexer
 
+# Logger setup.
+log = logging.getLogger(__name__)
+log.debug("Logging is configured.")
 
-@DatasetReader.register('clinc-reader')
-class DataFullReader(DatasetReader):
+
+@DatasetReader.register('oos-eval-reader')
+class OOSEvalReader(DatasetReader):
     """
     Read the data_full json dataset from the CLINC OOS dataset.
     """
@@ -30,7 +35,9 @@ class DataFullReader(DatasetReader):
         :param token_indexers: Dict containing token indexer, string.
         """
         super().__init__(lazy=False)
-        self.token_indexers = token_indexers or {"tokens": PretrainedTransformerTokenIndexer()}
+        self.token_indexers = token_indexers or {
+            "tokens": PretrainedTransformerTokenIndexer()
+        }
         self.path = Path(__file__).parent.absolute()/"oos-eval/data/"
 
 
