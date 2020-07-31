@@ -1,18 +1,19 @@
 import os
 import sys
 import logging
+import numpy as np
 import pandas as pd
 from pathlib import Path
-from utilities.exceptions import ReqdFileNotInSetError
-from dataload import clinc_json_to_df
 from allennlp.data.tokenizers import Token
 from allennlp.data import DatasetReader, instance
 from allennlp.data.tokenizers import Token, Tokenizer
 from allennlp.data.token_indexers import TokenIndexer
+from utilities.exceptions import ReqdFileNotInSetError
 from allennlp.data.fields import LabelField, TextField
 from typing import Dict, List, Tuple, Iterable, Iterator
+from utilities.exceptions import DataSetPortionMissingError
 from allennlp.data.tokenizers import PretrainedTransformerTokenizer
-from allennlp.data.token_indexers import PretrainedTransformerTokenIndexer
+from allennlp.data.token_indexers import PretrainedTransformerIndexer
 
 # Logger setup.
 log = logging.getLogger(__name__)
@@ -44,14 +45,13 @@ class OOSEvalReader(DatasetReader):
     def text_to_instance(
             self,
             tokens: List[Token],
-            tags: List[str] = None
+            label: List[str] = None
     ) -> Instance:
         sentence_field = TextField(tokens, self.token_indexers)
         fields = {"sentence": sentence_field}
 
         if tags:
-            label_field = SequenceLabelField(labels=tags, sequence_field=sentence_field)
-            fields["label"] = label_field
+            fields["label"] = LabelField(label)
 
         return Instance(fields)
 
@@ -79,9 +79,32 @@ class OOSEvalReader(DatasetReader):
         else:
             with open(self.path/fpath, "r") as f:
                 data_f = json.load(f)
-                data_dfs = clinc_json_to_df(data_f)
+                data = self._clinc_json_portion_to_np(data_f)
+                print(data.shape)
 
-                for line in f:
-                    pairs = line.strip().split()
-                    sentence, tags = zip(*(pair.split("###") for pair in pairs))
-                    yield self.text_to_instance([Token(word) for word in sentence], tags)
+                for line in data:
+                    print(line.shape)
+                    sentence, label = line[0], line[1]
+                    yield self.text_to_instance([Token(word) for word in sentence], label)
+
+    def _clinc_json_portion_to_np(
+            self,
+            loaded_json: json,
+            portion: str
+    ) -> np.array:
+        """
+        Convert a particular CLINC JSON file to a numpy array.
+        :param loaded_json: JSON object - must be loaded using json.load.
+        :param portion: The portion of the dataset requested; train,
+                dev, etc.
+        :return sentences, labels: A tuple containing sentences, and labels.
+        """
+        try:
+            sentences = np.array(loaded_json[portion]['text_cols'])
+            labels = np.array(loaded_json[portion]['label_cols'])
+        except KeyError as ke:
+            print(f"Incorrect portion name: {portion}.")
+            print(f"Error: {ke!r}.")
+            raise DataSetPortionMissingError()
+
+        return np.stack([sentences, labels], axis=0)
