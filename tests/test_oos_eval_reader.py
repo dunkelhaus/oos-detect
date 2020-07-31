@@ -1,5 +1,6 @@
 import pytest
 import logging.config
+from pathlib import Path
 from configs.log.log_conf import LOGGING_CONFIG
 
 # --- Universal logger setup - startup task ---
@@ -14,7 +15,10 @@ def dataset_reader():
 
 
 def test_read_works(dataset_reader):
-    dataset = dataset_reader.read()
+    this_src_dir = Path(__file__).parent.parent.absolute()
+    dataset = dataset_reader.read(
+        this_src_dir/"datasets/oos-eval/data/data_full_train.json"
+    )
     print('type of dataset: ', type(dataset))
     print('type of its first element: ', type(dataset[0]))
     print('size of dataset: ', len(dataset))
