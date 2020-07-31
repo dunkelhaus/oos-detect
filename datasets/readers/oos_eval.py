@@ -1,11 +1,12 @@
 import os
 import sys
+import json
 import logging
 import numpy as np
 import pandas as pd
 from pathlib import Path
 from allennlp.data.tokenizers import Token
-from allennlp.data import DatasetReader, instance
+from allennlp.data import DatasetReader, Instance
 from allennlp.data.tokenizers import Token, Tokenizer
 from allennlp.data.token_indexers import TokenIndexer
 from utilities.exceptions import ReqdFileNotInSetError
@@ -28,7 +29,10 @@ class OOSEvalReader(DatasetReader):
 
     def __init__(
             self,
-            token_indexers: Dict[str, TokenIndexer] = None
+            tokenizer: Tokenizer = None,
+            token_indexers: Dict[str, TokenIndexer] = None,
+            set_portion: str = "train",
+            max_length: int = 512
     ) -> None:
         """
         Parametrized constructor.
@@ -37,26 +41,39 @@ class OOSEvalReader(DatasetReader):
         """
         super().__init__(lazy=False)
         self.token_indexers = token_indexers or {
-            "tokens": PretrainedTransformerTokenIndexer()
+            "tokens": PretrainedTransformerIndexer(
+                model_name="bert-base-uncased",
+                max_length=max_length
+            )
         }
-        self.path = Path(__file__).parent.absolute()/"oos-eval/data/"
+        self.tokenizer = tokenizer or PretrainedTransformerTokenizer(
+            "bert-base-uncased",
+            max_length=max_length
+        )
+        self.path = Path(__file__).parent
+                        .absolute()/"oos-eval/data/"
+        self.set_portion = set_portion
 
 
     def text_to_instance(
             self,
-            tokens: List[Token],
+            sentence: str,
             label: List[str] = None
     ) -> Instance:
+        tokens = self.tokenizer.tokenize()
         sentence_field = TextField(tokens, self.token_indexers)
         fields = {"sentence": sentence_field}
 
-        if tags:
+        if label:
             fields["label"] = LabelField(label)
 
         return Instance(fields)
 
 
-    def _read(self, set_type: str, set_portion: str) -> Iterator[Instance]:
+    def _read(
+            self,
+            file_path: str
+    ) -> Iterator[Instance]:
         """
         AllenNLP DatasetReader read method. Generator for Instances.
 
@@ -65,11 +82,11 @@ class OOSEvalReader(DatasetReader):
         :param set_portion: The portion of the dataset being used;
                 Whether it is the train, val, or dev set.
         """
-        fpath = self.path/(set_type + ".json")
+        # fpath = self.path/(set_type + ".json")
 
         try:
-            fpath.resolve(strict=True)
-            assert fpath.is_file()
+            # file_path.resolve(strict=True)
+            assert os.path.is_file(file_path)
 
         except FileNotFoundError as fe:
             print(f"Mentioned set type not found: {set_type}.")

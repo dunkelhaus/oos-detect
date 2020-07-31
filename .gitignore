@@ -3,6 +3,7 @@ __pycache__/
 */__pycache/*
 *.pyc
 .pytest_cache/
+*.egg-info/
 
 # Logs
 logs/

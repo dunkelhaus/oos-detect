@@ -1,3 +1,0 @@
-[submodule "datasets/oos-eval"]
-	path = datasets/oos-eval
-	url = https://github.com/clinc/oos-eval.git
