@@ -31,7 +31,6 @@ class OOSEvalReader(DatasetReader):
             self,
             tokenizer: Tokenizer = None,
             token_indexers: Dict[str, TokenIndexer] = None,
-            set_portion: str = "train",
             max_length: int = 512
     ) -> None:
         """
@@ -47,12 +46,10 @@ class OOSEvalReader(DatasetReader):
             )
         }
         self.tokenizer = tokenizer or PretrainedTransformerTokenizer(
-            "bert-base-uncased",
-            max_length=max_length
+            model_name="bert-base-uncased",
+            max_length=max_length,
+            add_special_tokens=False
         )
-        self.path = Path(__file__).parent
-                        .absolute()/"oos-eval/data/"
-        self.set_portion = set_portion
 
 
     def text_to_instance(
@@ -60,7 +57,7 @@ class OOSEvalReader(DatasetReader):
             sentence: str,
             label: List[str] = None
     ) -> Instance:
-        tokens = self.tokenizer.tokenize()
+        tokens = self.tokenizer.tokenize(sentence)
         sentence_field = TextField(tokens, self.token_indexers)
         fields = {"sentence": sentence_field}
 
@@ -86,7 +83,8 @@ class OOSEvalReader(DatasetReader):
 
         try:
             # file_path.resolve(strict=True)
-            assert os.path.is_file(file_path)
+            log.debug(file_path)
+            assert os.path.isfile(file_path)
 
         except FileNotFoundError as fe:
             print(f"Mentioned set type not found: {set_type}.")
@@ -94,20 +92,19 @@ class OOSEvalReader(DatasetReader):
             raise ReqdFileNotInSetError()
 
         else:
-            with open(self.path/fpath, "r") as f:
-                data_f = json.load(f)
-                data = self._clinc_json_portion_to_np(data_f)
-                print(data.shape)
+            with open(file_path, "r") as f:
+                data_f = json.load(f)["data"]
+                # data = self._clinc_json_to_np(data_f)
+                print(len(data_f))
 
-                for line in data:
-                    print(line.shape)
+                for line in data_f:
+                    print(len(line))
                     sentence, label = line[0], line[1]
-                    yield self.text_to_instance([Token(word) for word in sentence], label)
+                    yield self.text_to_instance(sentence, label)
 
-    def _clinc_json_portion_to_np(
+    def _clinc_json_to_np(
             self,
-            loaded_json: json,
-            portion: str
+            loaded_json: json
     ) -> np.array:
         """
         Convert a particular CLINC JSON file to a numpy array.
@@ -117,11 +114,10 @@ class OOSEvalReader(DatasetReader):
         :return sentences, labels: A tuple containing sentences, and labels.
         """
         try:
-            sentences = np.array(loaded_json[portion]['text_cols'])
-            labels = np.array(loaded_json[portion]['label_cols'])
+            data = np.array(loaded_json["data"])
         except KeyError as ke:
             print(f"Incorrect portion name: {portion}.")
             print(f"Error: {ke!r}.")
             raise DataSetPortionMissingError()
 
-        return np.stack([sentences, labels], axis=0)
+        return data
