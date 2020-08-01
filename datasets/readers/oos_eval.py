@@ -95,10 +95,8 @@ class OOSEvalReader(DatasetReader):
             with open(file_path, "r") as f:
                 data_f = json.load(f)["data"]
                 # data = self._clinc_json_to_np(data_f)
-                print(len(data_f))
 
                 for line in data_f:
-                    print(len(line))
                     sentence, label = line[0], line[1]
                     yield self.text_to_instance(sentence, label)
 

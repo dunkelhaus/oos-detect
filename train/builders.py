@@ -3,10 +3,10 @@ import logging.config
 from configs.log.log_conf import LOGGING_CONFIG
 from oos_detect.utilities.locate import locate_oos_data
 from oos_detect.dataset.readers.oos_eval import OOSEvalReader
+from allennlp.modules.seq2vec_encoders.bert_pooler import BertPooler
 
 # --- Universal logger setup - startup task ---
 logging.config.dictConfig(LOGGING_CONFIG)
-
 
 
 def build_dataset_reader() -> DatasetReader:

@@ -17,7 +17,7 @@ def dataset_reader():
 def test_read_works(dataset_reader):
     this_src_dir = Path(__file__).parent.parent.absolute()
     dataset = dataset_reader.read(
-        this_src_dir/"datasets/oos-eval/data"
+        this_src_dir/"datasets/oos-eval/data/data_full_train.json"
     )
     print('type of dataset: ', type(dataset))
     print('type of its first element: ', type(dataset[0]))
