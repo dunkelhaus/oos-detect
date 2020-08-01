@@ -28,7 +28,8 @@ class SingleLayerLSTMClassifier(Model):
 
     def forward(self,
                 sentence: TextFieldTensors,
-                label: torch.Tensor = None) -> Dict[str, torch.Tensor]:
+                label: torch.Tensor = None
+        ) -> Dict[str, torch.Tensor]:
         # Shape: (batch_size, num_tokens, embedding_dim)
         embedded_text = self.embedder(text)
         # Shape: (batch_size, num_tokens)
