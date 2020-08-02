@@ -18,10 +18,9 @@ from allennlp.data.token_indexers import PretrainedTransformerIndexer
 
 # Logger setup.
 log = logging.getLogger(__name__)
-log.debug("Logging is configured.")
 
 
-@DatasetReader.register('oos-eval-reader')
+# @DatasetReader.register('oos-eval-reader')
 class OOSEvalReader(DatasetReader):
     """
     Read the data_full json dataset from the CLINC OOS dataset.
@@ -47,8 +46,7 @@ class OOSEvalReader(DatasetReader):
         }
         self.tokenizer = tokenizer or PretrainedTransformerTokenizer(
             model_name="bert-base-uncased",
-            max_length=max_length,
-            add_special_tokens=False
+            max_length=max_length
         )
 
 
@@ -61,8 +59,7 @@ class OOSEvalReader(DatasetReader):
         sentence_field = TextField(tokens, self.token_indexers)
         fields = {"sentence": sentence_field}
 
-        if label:
-            fields["label"] = LabelField(label)
+        fields["label"] = LabelField(label)
 
         return Instance(fields)
 

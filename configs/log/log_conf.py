@@ -68,7 +68,7 @@ LOGGING_CONFIG = {
         },
     },
     'loggers': {
-        'root': {
+        '': {
             'handlers': [
                 'console',
                 'debug_file_handler',
