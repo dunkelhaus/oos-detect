@@ -1,11 +1,20 @@
 import logging.config
-from allennlp.training.util import evaluate
 from configs.log.log_conf import LOGGING_CONFIG
-from oos_eval.train.loop import run_training_loop
-from oos_detect.utilities.locate import locate_oos_data
 
 # --- Universal logger setup - startup task ---
 logging.config.dictConfig(LOGGING_CONFIG)
+logging.getLogger("transformers").setLevel(logging.ERROR)
+# logging.getLogger("transformers").setLevel(logging.DEBUG)
+
+from allennlp.data import DataLoader
+from train.loop import run_training_loop
+from allennlp.training.util import evaluate
+from utilities.locate import locate_oos_data
+
+
+# Logger setup.
+log = logging.getLogger(__name__)
+log.debug("Logging is configured.")
 
 
 # We've copied the training loop from an earlier example, with updated model
