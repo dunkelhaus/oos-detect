@@ -1,12 +1,17 @@
-from allennlp
-import logging.config
+import logging
+from train.builders import build_model
+from train.builders import build_vocab
+from train.builders import build_trainer
+from utilities.locate import locate_oos_data
+from train.builders import build_data_loaders
+from typing import List, Dict, Tuple, Iterable
+from train.builders import build_dataset_reader
+from utilities.locate import locate_results_dir
 from configs.log.log_conf import LOGGING_CONFIG
-from oos_detect.training.builders import build_model
-from oos_detect.training.builders import build_vocab
-from oos_detect.training.builders import build_trainer
-from oos_detect.utilities.locate import locate_oos_data
-from oos_detect.training.builders import build_data_loaders
-from oos_detect.training.builders import build_dataset_reader
+from allennlp.data import Instance, DatasetReader
+
+# Logger setup.
+log = logging.getLogger(__name__)
 
 
 def read_data(
@@ -39,6 +44,13 @@ def run_training_loop():
     # allennlp-specific collate function, that runs our indexing and
     # batching code.
     train_loader, dev_loader = build_data_loaders(train_data, dev_data)
+
+    # Locate serialization directory.
+    serialization_dir = locate_results_dir()
+
+    if not serialization_dir:
+        log.info("Failed to locate results directory, stopping.")
+        return
 
     # You obviously won't want to create a temporary file for your training
     # results, but for execution in binder for this guide, we need to do this.
