@@ -1,3 +1,4 @@
+import wandb
 import torch
 import logging
 from typing import Dict
@@ -12,6 +13,7 @@ from allennlp.modules.token_embedders import TokenEmbedder
 # Logger setup.
 log = logging.getLogger(__name__)
 
+wandb.init(entity="dunkelhaus", project="oos-detect")
 
 # @Model.register('single_layer_lstm')
 class SingleLayerLSTMClassifier(Model):
@@ -23,6 +25,7 @@ class SingleLayerLSTMClassifier(Model):
         self.embedder = embedder
         self.encoder = encoder
         num_labels = vocab.get_vocab_size("labels")
+        log.debug(f"Labels: {num_labels}.")
         self.classifier = torch.nn.Linear(
             encoder.get_output_dim(),
             num_labels
@@ -37,18 +40,18 @@ class SingleLayerLSTMClassifier(Model):
         # Shape: (batch_size, num_tokens, embedding_dim)
         # log.debug(f"Forward pass starting. Sentence Dict: {sentence!r}")
 
-        embedded_text = self.embedder(
-            token_ids=sentence["tokens"]["token_ids"],
-            mask=sentence["tokens"]["mask"],
-            type_ids=sentence["tokens"]["type_ids"],
-            segment_concat_mask=sentence["tokens"]["segment_concat_mask"]
-        )
-        # Shape: (batch_size, num_tokens)
         mask = util.get_text_field_mask(sentence)
+        embedded_text = self.embedder(sentence)
+        # Shape: (batch_size, num_tokens)
+        # mask = sentence["tokens"]["mask"]
+
         # Shape: (batch_size, encoding_dim)
         encoded_text = self.encoder(embedded_text, mask)
         # Shape: (batch_size, num_labels)
+        # log.debug(f"Running the classifier. "
+        #         f"{mask}")
         logits = self.classifier(encoded_text)
+        log.debug("Ran the classifier.")
         # Shape: (batch_size, num_labels)
         probs = torch.nn.functional.softmax(logits)
         # Shape: (1,)
@@ -59,6 +62,10 @@ class SingleLayerLSTMClassifier(Model):
         if label is not None:
             self.accuracy(logits, label)
             output['loss'] = torch.nn.functional.cross_entropy(logits, label)
+            wandb.log({
+                "loss": output['loss'],
+                "accuracy": self.accuracy.get_metric(reset=False)
+            })
         return output
 
     def get_metrics(self, reset: bool = False) -> Dict[str, float]:
