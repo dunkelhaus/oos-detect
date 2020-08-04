@@ -22,14 +22,22 @@ list(tokenizer.vocab.keys())[5000:5020]
 text = "After stealing money from the bank vault, the bank robber was seen " \
        "fishing on the Mississippi river bank."
 
+text = "define thoroughbred"
+
 # Add the special tokens.
 marked_text = "[CLS] " + text + " [SEP]"
 
 # Split the sentence into tokens.
 tokenized_text = tokenizer.tokenize(marked_text)
+print(tokenized_text)
 
 # Map the token strings to their vocabulary indeces.
-indexed_tokens = tokenizer.convert_tokens_to_ids(tokenized_text)
+indexed_tokens = tokenizer.convert_ids_to_tokens([ 101, 2828, 1997, 3980, 2024, 2017, 7704, 2000, 2008, 1045, 2064, 3198,102])
+
+tokenid = tokenizer.convert_tokens_to_ids(tokenized_text)
+print(tokenid)
+
+print(indexed_tokens)
 
 # Display the words with their indeces.
 for tup in zip(tokenized_text, indexed_tokens):

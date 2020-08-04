@@ -119,7 +119,10 @@ def _tokenize_bert_sentence(
     marked_text = "[CLS] " + text + " [SEP]"
 
     # Split the sentence into tokens.
-    tokenized_text = tokenizer.tokenize(marked_text)
+    tokenized_text = tokenizer.encode(
+        text,
+        add_special_tokens=True
+    )
 
     # Map the token strings to their vocabulary indices.
     indexed_tokens = tokenizer.convert_tokens_to_ids(tokenized_text)
