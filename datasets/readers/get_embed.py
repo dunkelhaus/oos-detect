@@ -5,11 +5,6 @@ import numpy as np
 from transformers import BertTokenizer, BertModel
 # logging.basicConfig(level=logging.INFO)
 
-
-@task
-def
-
-
 @task
 def get_hidden_states(
         model: BertModel,
