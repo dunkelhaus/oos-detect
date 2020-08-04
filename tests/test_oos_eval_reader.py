@@ -22,7 +22,7 @@ def test_read_works(dataset_reader):
     )
     print('type of dataset: ', type(dataset))
     print('type of its first element: ', type(dataset[0]))
-    print(f"first element: {dataset[0].fields!r}")
+    print(f"first element: {dataset[0].fields['sentence'].tokens!r}")
     print('size of dataset: ', len(dataset))
 
     assert dataset is not None
