@@ -3,9 +3,11 @@ import logging.config
 from allennlp.models import Model
 from allennlp.data import PyTorchDataLoader
 from utilities.locate import locate_oos_data
-from typing import List, Dict, Tuple, Iterable
+from allennlp.data.dataloader import TensorDict
+from typing import Any, List, Dict, Tuple, Iterable
 from datasets.readers.oos_eval import OOSEvalReader
 from models.single_layer_lstm import SingleLayerLSTMClassifier
+from allennlp.training.trainer import EpochCallback, BatchCallback
 from allennlp.training.optimizers import HuggingfaceAdamWOptimizer
 from allennlp.modules.seq2vec_encoders import PytorchSeq2VecWrapper
 from allennlp.modules.seq2vec_encoders.bert_pooler import BertPooler
@@ -18,6 +20,136 @@ from allennlp.modules.text_field_embedders import TextFieldEmbedder, BasicTextFi
 log = logging.getLogger(__name__)
 
 
+class LogBatchMetricsToWandb(BatchCallback):
+    def __init__(
+            self,
+            wbrun: Any,
+            epoch_end_log_freq: int = 1
+    ) -> None:
+        # import wandb here to be sure that it was initialized
+        # before this line was executed
+        super().__init__()
+        # import wandb  # type: ignore
+
+        self.config: Optional[Dict[str, Value]] = None
+
+        self.wandb = wbrun
+        self.batch_end_log_freq = 1
+        self.current_batch_num = -1
+        self.previous_logged_batch = -1
+
+    def update_config(self, trainer: GradientDescentTrainer) -> None:
+        if self.config is None:
+            # we assume that allennlp train pipeline would have written
+            # the entire config to the file by this time
+            log.info(f"Updating config in callback init...")
+            wbconf = {}
+            wbconf["batch_size"] = 64
+            wbconf["lr"] = 0.0001
+            wbconf["num_epochs"] = 5
+            wbconf["no_cuda"] = False
+            wbconf["log_interval"] = 10
+            self.config = wbconf
+            self.wandb.config.update(self.config)
+
+
+    def __call__(
+        self,
+        trainer: "GradientDescentTrainer",
+        batch_inputs: List[List[TensorDict]],
+        batch_outputs: List[Dict[str, Any]],
+        epoch: int,
+        batch_number: int,
+        is_training: bool,
+        is_master: bool
+    ) -> None:
+        """
+        This should run after all the epoch end metrics have
+        been computed by the metric_tracker callback.
+        """
+        if self.config is None:
+            self.update_config(trainer)
+
+        self.current_batch_num += 1
+
+        if (is_master
+                and (self.current_batch_num - self.previous_logged_batch)
+                >= self.batch_end_log_freq):
+            log.info("Writing metrics for the batch to wandb")
+            print(f"Batch outputs are: {batch_outputs!r}")
+            batch_outputs = [{key:value.cpu() for key, value in batch_output.items() if isinstance(value, torch.Tensor)} for batch_output in batch_outputs]
+            self.wandb.log(
+                {
+                    **batch_outputs[0],
+                },
+                step=self.current_batch_num,
+            )
+            self.previous_logged_batch = self.current_batch_num
+
+
+class LogMetricsToWandb(EpochCallback):
+    def __init__(
+            self,
+            wbrun: Any,
+            epoch_end_log_freq: int = 1
+    ) -> None:
+        # import wandb here to be sure that it was initialized
+        # before this line was executed
+        super().__init__()
+        # import wandb  # type: ignore
+
+        self.config: Optional[Dict[str, Value]] = None
+
+        self.wandb = wbrun
+        self.epoch_end_log_freq = 1
+        self.current_batch_num = -1
+        self.current_epoch_num = -1
+        self.previous_logged_epoch = -1
+
+    def update_config(self, trainer: GradientDescentTrainer) -> None:
+        if self.config is None:
+            # we assume that allennlp train pipeline would have written
+            # the entire config to the file by this time
+            log.info(f"Updating config in callback init...")
+            wbconf = {}
+            wbconf["batch_size"] = 64
+            wbconf["lr"] = 0.0001
+            wbconf["num_epochs"] = 5
+            wbconf["no_cuda"] = False
+            wbconf["log_interval"] = 10
+            self.config = wbconf
+            self.wandb.config.update(self.config)
+
+    def __call__(
+            self,
+            trainer: GradientDescentTrainer,
+            metrics: Dict[str, Any],
+            epoch: int,
+            is_master: bool,
+    ) -> None:
+        """ This should run after all the epoch end metrics have
+        been computed by the metric_tracker callback.
+        """
+
+        if self.config is None:
+            self.update_config(trainer)
+
+        self.current_epoch_num += 1
+
+        if (is_master
+                and (self.current_epoch_num - self.previous_logged_epoch)
+                >= self.epoch_end_log_freq):
+            log.info("Writing metrics for the epoch to wandb")
+            log.debug(f"Metrics are: {metrics!r}")
+            self.wandb.log(
+                {
+                    **metrics,
+                },
+                step=self.current_epoch_num,
+            )
+            self.previous_logged_epoch = self.current_epoch_num
+
+
 def build_dataset_reader() -> DatasetReader:
     """
     Instantiate dataset reader - factory method.
@@ -25,6 +157,24 @@ def build_dataset_reader() -> DatasetReader:
     :return OOSEvalReader: Instantiated DatasetReader object.
     """
     return OOSEvalReader()
+
+
+def build_epoch_callbacks(wbrun) -> EpochCallback:
+    """
+    Instantiate callback - factory method.
+
+    :return LogMetricsToWandb: Instantiated LogMetricsToWandb object.
+    """
+    return [LogMetricsToWandb(wbrun=wbrun)]
+
+
+def build_batch_callbacks(wbrun) -> BatchCallback:
+    """
+    Instantiate callback - factory method.
+
+    :return LogBatchMetricsToWandb: Instantiated LogBatchMetricsToWandb object.
+    """
+    return [LogBatchMetricsToWandb(wbrun=wbrun)]
 
 
 def build_vocab(instances: Iterable[Instance]) -> Vocabulary:
@@ -38,7 +188,7 @@ def build_vocab(instances: Iterable[Instance]) -> Vocabulary:
     return Vocabulary.from_instances(instances)
 
 
-def build_model(vocab: Vocabulary) -> Model:
+def build_model(vocab: Vocabulary, wbrun: Any) -> Model:
     """
     Build the Model object, along with the embedder and encoder.
 
@@ -55,7 +205,7 @@ def build_model(vocab: Vocabulary) -> Model:
     encoder = BertPooler("bert-base-uncased", requires_grad=True)
     # encoder = PytorchSeq2VecWrapper(torch.nn.LSTM(768,20,batch_first=True))
     log.debug("Encoder built.")
-    return SingleLayerLSTMClassifier(vocab, embedder, encoder).cuda(0)
+    return SingleLayerLSTMClassifier(vocab, embedder, encoder, wbrun).cuda(0)
 
 
 def build_data_loaders(
@@ -95,7 +245,8 @@ def build_trainer(
     train_loader: DataLoader,
     dev_loader: DataLoader,
     lr: float,
-    num_epochs: int
+    num_epochs: int,
+    wbrun: Any
 ) -> Trainer:
     """
     Build the model trainer. Includes instantiating the optimizer as well.
@@ -118,6 +269,8 @@ def build_trainer(
         data_loader=train_loader,
         validation_data_loader=dev_loader,
         num_epochs=num_epochs,
-        optimizer=optimizer
+        optimizer=optimizer,
+        epoch_callbacks=build_epoch_callbacks(wbrun),
+        batch_callbacks=build_batch_callbacks(wbrun)
     )
     return trainer

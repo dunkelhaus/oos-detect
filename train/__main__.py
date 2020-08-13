@@ -18,8 +18,7 @@ log = logging.getLogger(__name__)
 log.debug("Logging is configured.")
 
 
-wandb.init(entity="dunkelhaus", project="oos-detect")
-
+# wandb.init(entity="dunkelhaus", project="oos-detect", sync_tensorboard=True, reinit=True)
 
 # We've copied the training loop from an earlier example, with updated model
 # code, above in the Setup section. We run the training loop to get a trained
