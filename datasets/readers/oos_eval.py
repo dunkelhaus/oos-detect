@@ -1,17 +1,13 @@
 import os
-import sys
 import json
 import logging
 import numpy as np
-import pandas as pd
-from pathlib import Path
-from allennlp.data.tokenizers import Token
+from typing import Dict, List, Iterator
+from allennlp.data.tokenizers import Tokenizer
 from allennlp.data import DatasetReader, Instance
-from allennlp.data.tokenizers import Token, Tokenizer
 from allennlp.data.token_indexers import TokenIndexer
 from utilities.exceptions import ReqdFileNotInSetError
 from allennlp.data.fields import LabelField, TextField
-from typing import Dict, List, Tuple, Iterable, Iterator
 from utilities.exceptions import DataSetPortionMissingError
 from allennlp.data.tokenizers import PretrainedTransformerTokenizer
 from allennlp.data.token_indexers import PretrainedTransformerIndexer
@@ -49,7 +45,6 @@ class OOSEvalReader(DatasetReader):
             max_length=max_length
         )
 
-
     def text_to_instance(
             self,
             sentence: str,
@@ -63,7 +58,6 @@ class OOSEvalReader(DatasetReader):
 
         return Instance(fields)
 
-
     def _read(
             self,
             file_path: str
@@ -72,7 +66,8 @@ class OOSEvalReader(DatasetReader):
         AllenNLP DatasetReader read method. Generator for Instances.
 
         :param set_type: The type of dataset being read - the JSON
-                file's name without extension; full, imbalanced, oos_plus, or small.
+                file's name without extension; full, imbalanced,
+                oos_plus, or small.
         :param set_portion: The portion of the dataset being used;
                 Whether it is the train, val, or dev set.
         """
@@ -84,8 +79,8 @@ class OOSEvalReader(DatasetReader):
             assert os.path.isfile(file_path)
 
         except FileNotFoundError as fe:
-            print(f"Mentioned set type not found: {set_type}.")
-            print(f"Error: {ke!r}.")
+            print(f"Mentioned file at path not found: {file_path}.")
+            print(f"Error: {fe!r}.")
             raise ReqdFileNotInSetError()
 
         else:
@@ -111,7 +106,7 @@ class OOSEvalReader(DatasetReader):
         try:
             data = np.array(loaded_json["data"])
         except KeyError as ke:
-            print(f"Incorrect portion name: {portion}.")
+            print("Invalid data.")
             print(f"Error: {ke!r}.")
             raise DataSetPortionMissingError()
 

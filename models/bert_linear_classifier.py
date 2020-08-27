@@ -1,4 +1,3 @@
-import wandb
 import torch
 import logging
 from typing import Any, Dict
@@ -16,11 +15,14 @@ log = logging.getLogger(__name__)
 
 # @Model.register('bert_linear_classifier')
 class BertLinearClassifier(Model):
-    def __init__(self,
-                 vocab: Vocabulary,
-                 embedder: TokenEmbedder,
-                 encoder: Seq2VecEncoder,
-                 wbrun: Any):
+
+    def __init__(
+            self,
+            vocab: Vocabulary,
+            embedder: TokenEmbedder,
+            encoder: Seq2VecEncoder,
+            wbrun: Any
+    ):
         super().__init__(vocab)
         self.embedder = embedder
         self.encoder = encoder
@@ -34,10 +36,11 @@ class BertLinearClassifier(Model):
         wbrun.watch(self.classifier, log=all)
         log.debug("Model init complete.")
 
-    def forward(self,
-                sentence: TextFieldTensors,
-                label: torch.Tensor = None
-        ) -> Dict[str, torch.Tensor]:
+    def forward(
+            self,
+            sentence: TextFieldTensors,
+            label: torch.Tensor = None
+    ) -> Dict[str, torch.Tensor]:
         # Shape: (batch_size, num_tokens, embedding_dim)
         # log.debug(f"Forward pass starting. Sentence Dict: {sentence!r}")
 

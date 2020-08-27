@@ -1,14 +1,13 @@
 import os
-import sys
 import json
-import numpy as np
 import pandas as pd
 from pathlib import Path
+from typing import List, Dict
 from utilities.exceptions import DataSetPortionMissingError
 
 
 # TODO: Add support for 'all' flag.
-def load_clinc_data(all: bool=False) -> Dict:
+def load_clinc_data(all: bool = False) -> Dict:
     """
     Load OOS data from DATA_DIR into a Dict of pd.DataFrames.
 
@@ -21,7 +20,7 @@ def load_clinc_data(all: bool=False) -> Dict:
     data = {}
     print(f"Loading files: {files!r}")
 
-    paths = {f[:f.find('.')]:oos_data_dir/f for f in files}
+    paths = {f[:f.find('.')]: oos_data_dir/f for f in files}
 
     print(paths)
 
@@ -42,7 +41,7 @@ def load_clinc_data(all: bool=False) -> Dict:
 
 def clinc_json_to_df(
         loaded_json: json,
-        portions: List=None
+        portions: List = None
 ) -> Dict[str, pd.DataFrame]:
     """
     Convert a particular CLINC JSON file to a dict of DFs.
@@ -60,7 +59,7 @@ def clinc_json_to_df(
 
     # Submethod verifies the portion exists, etc.
     dfs = {
-        key:clinc_json_portion_to_df(loaded_json, value)
+        key: clinc_json_portion_to_df(loaded_json, value)
         for key, value
         in subset
     }

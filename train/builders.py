@@ -1,20 +1,20 @@
 import torch
 import logging.config
 from allennlp.models import Model
+from allennlp.data import Vocabulary
 from allennlp.data import PyTorchDataLoader
-from utilities.locate import locate_oos_data
 from allennlp.data.dataloader import TensorDict
-from typing import Any, List, Dict, Tuple, Iterable
 from datasets.readers.oos_eval import OOSEvalReader
+from allennlp.data import DatasetReader, DataLoader, Instance
 from models.bert_linear_classifier import BertLinearClassifier
 from allennlp.training.trainer import EpochCallback, BatchCallback
 from allennlp.training.optimizers import HuggingfaceAdamWOptimizer
-from allennlp.modules.seq2vec_encoders import PytorchSeq2VecWrapper
+from typing import Any, List, Dict, Tuple, Value, Iterable, Optional
 from allennlp.modules.seq2vec_encoders.bert_pooler import BertPooler
 from allennlp.training.trainer import Trainer, GradientDescentTrainer
-from allennlp.data import DatasetReader, DataLoader, Instance, Vocabulary
+from allennlp.modules.text_field_embedders import TextFieldEmbedder
+from allennlp.modules.text_field_embedders import BasicTextFieldEmbedder
 from allennlp.modules.token_embedders import PretrainedTransformerEmbedder
-from allennlp.modules.text_field_embedders import TextFieldEmbedder, BasicTextFieldEmbedder
 
 # Logger setup.
 log = logging.getLogger(__name__)
@@ -42,7 +42,7 @@ class LogBatchMetricsToWandb(BatchCallback):
         if self.config is None:
             # we assume that allennlp train pipeline would have written
             # the entire config to the file by this time
-            log.info(f"Updating config in callback init...")
+            log.info("Updating config in callback init...")
             wbconf = {}
             wbconf["batch_size"] = 64
             wbconf["lr"] = 0.0001
@@ -51,7 +51,6 @@ class LogBatchMetricsToWandb(BatchCallback):
             wbconf["log_interval"] = 10
             self.config = wbconf
             self.wandb.config.update(self.config)
-
 
     def __call__(
         self,
@@ -77,7 +76,14 @@ class LogBatchMetricsToWandb(BatchCallback):
                 >= self.batch_end_log_freq):
             log.info("Writing metrics for the batch to wandb")
             print(f"Batch outputs are: {batch_outputs!r}")
-            batch_outputs = [{key:value.cpu() for key, value in batch_output.items() if isinstance(value, torch.Tensor)} for batch_output in batch_outputs]
+
+            batch_outputs = [{
+                key: value.cpu()
+                for key, value
+                in batch_output.items()
+                if isinstance(value, torch.Tensor)
+            } for batch_output in batch_outputs]
+
             self.wandb.log(
                 {
                     **batch_outputs[0],
@@ -110,7 +116,7 @@ class LogMetricsToWandb(EpochCallback):
         if self.config is None:
             # we assume that allennlp train pipeline would have written
             # the entire config to the file by this time
-            log.info(f"Updating config in callback init...")
+            log.info("Updating config in callback init...")
             wbconf = {}
             wbconf["batch_size"] = 64
             wbconf["lr"] = 0.0001
@@ -196,7 +202,8 @@ def build_model(vocab: Vocabulary, wbrun: Any) -> Model:
     :return Model: The model object itself.
     """
     log.debug("Building the model.")
-    vocab_size = vocab.get_vocab_size("tokens")
+    # vocab_size = vocab.get_vocab_size("tokens")
+
     bert_embedder = PretrainedTransformerEmbedder("bert-base-uncased")
     embedder: TextFieldEmbedder = BasicTextFieldEmbedder(
         {"tokens": bert_embedder}
