@@ -76,7 +76,7 @@ class OOSEvalReader(DatasetReader):
         try:
             # file_path.resolve(strict=True)
             log.debug(file_path)
-            assert os.path.isfile(file_path)
+            # assert os.path.isfile(file_path)
 
         except FileNotFoundError as fe:
             print(f"Mentioned file at path not found: {file_path}.")
