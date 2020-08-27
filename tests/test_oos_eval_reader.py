@@ -1,11 +1,11 @@
 import pytest
 import logging.config
 from pathlib import Path
-from configs.log.log_conf import LOGGING_CONFIG
+# from configs.log.log_conf import LOGGING_CONFIG
 
 # --- Universal logger setup - startup task ---
-logging.config.dictConfig(LOGGING_CONFIG)
-logging.getLogger("transformers").setLevel(logging.ERROR)
+# logging.config.dictConfig(LOGGING_CONFIG)
+# logging.getLogger("transformers").setLevel(logging.ERROR)
 
 
 @pytest.fixture
