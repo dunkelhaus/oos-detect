@@ -6,7 +6,7 @@ from utilities.locate import locate_oos_data
 from allennlp.data.dataloader import TensorDict
 from typing import Any, List, Dict, Tuple, Iterable
 from datasets.readers.oos_eval import OOSEvalReader
-from models.single_layer_lstm import SingleLayerLSTMClassifier
+from models.bert_linear_classifier import BertLinearClassifier
 from allennlp.training.trainer import EpochCallback, BatchCallback
 from allennlp.training.optimizers import HuggingfaceAdamWOptimizer
 from allennlp.modules.seq2vec_encoders import PytorchSeq2VecWrapper
@@ -205,10 +205,36 @@ def build_model(vocab: Vocabulary, wbrun: Any) -> Model:
     encoder = BertPooler("bert-base-uncased", requires_grad=True)
     # encoder = PytorchSeq2VecWrapper(torch.nn.LSTM(768,20,batch_first=True))
     log.debug("Encoder built.")
-    return SingleLayerLSTMClassifier(vocab, embedder, encoder, wbrun).cuda(0)
+    return BertLinearClassifier(vocab, embedder, encoder, wbrun).cuda(0)
 
 
-def build_data_loaders(
+def build_data_loader(
+    data: torch.utils.data.Dataset,
+    batch_size: int,
+    shuffle: bool = True
+) -> DataLoader:
+    """
+    Build an AllenNLP DataLoader.
+
+    :param train_data: The training dataset, torch object.
+    :param dev_data: The dev dataset, torch object.
+    :return train_loader, dev_loader: The train and dev data loaders as a
+            tuple.
+    """
+    # Note that DataLoader is imported from allennlp above, *not* torch.
+    # We need to get the allennlp-specific collate function, which is
+    # what actually does indexing and batching.
+    log.debug("Building DataLoader.")
+    loader = PyTorchDataLoader(
+        data,
+        batch_size=batch_size,
+        shuffle=True
+    )
+    log.debug("DataLoader built.")
+    return loader
+
+
+def build_train_data_loaders(
     train_data: torch.utils.data.Dataset,
     dev_data: torch.utils.data.Dataset,
     batch_size: int
@@ -221,21 +247,18 @@ def build_data_loaders(
     :return train_loader, dev_loader: The train and dev data loaders as a
             tuple.
     """
-    # Note that DataLoader is imported from allennlp above, *not* torch.
-    # We need to get the allennlp-specific collate function, which is
-    # what actually does indexing and batching.
-    log.debug("Building DataLoaders.")
-    train_loader = PyTorchDataLoader(
+    log.debug("Building Training DataLoaders.")
+    train_loader = build_data_loader(
         train_data,
         batch_size=batch_size,
         shuffle=True
     )
-    dev_loader = PyTorchDataLoader(
+    dev_loader = build_data_loader(
         dev_data,
         batch_size=batch_size,
         shuffle=False
     )
-    log.debug("DataLoaders built.")
+    log.debug("Training DataLoaders built.")
     return train_loader, dev_loader
 
 

@@ -5,13 +5,15 @@ import logging
 from train.builders import build_model
 from train.builders import build_vocab
 from train.builders import build_trainer
+from allennlp.training.util import evaluate
 from utilities.locate import locate_oos_data
-from train.builders import build_data_loaders
+from train.builders import build_data_loader
 from typing import List, Dict, Tuple, Iterable
 from train.builders import build_dataset_reader
 from utilities.locate import locate_results_dir
 from configs.log.log_conf import LOGGING_CONFIG
 from allennlp.data import Instance, DatasetReader
+from train.builders import build_train_data_loaders
 
 # Logger setup.
 log = logging.getLogger(__name__)
@@ -27,7 +29,7 @@ def read_data(
     return training_data, validation_data
 
 
-def run_training_loop():
+def run_training_loop(run_test: bool = False):
     wbrun = wandb.init(project="oos-detect", sync_tensorboard=False, name="dunkrun")
     # wandb.tensorboard.patch(save=True, tensorboardX=False)
     batch_size = 64
@@ -57,7 +59,7 @@ def run_training_loop():
     # These are again a subclass of pytorch DataLoaders, with an
     # allennlp-specific collate function, that runs our indexing and
     # batching code.
-    train_loader, dev_loader = build_data_loaders(train_data, dev_data, batch_size)
+    train_loader, dev_loader = build_train_data_loaders(train_data, dev_data, batch_size)
 
     # Locate serialization directory.
     serialization_dir = locate_results_dir()
@@ -81,6 +83,19 @@ def run_training_loop():
     )
 
     trainer.train()
+
+    if run_test:
+        test_data = dataset_reader.read(locate_oos_data()/"data_full_test.json")
+        test_data.index_with(model.vocab)
+        test_data_loader = build_data_loader(
+            test_data,
+            batch_size=8,
+            shuffle=False
+        )
+        results = evaluate(model, test_data_loader, cuda_device=0)
+        print(results)
+        #log.info(results)
+
 
     # wandb.join()
     # torch.save(model.state_dict(), os.path.join(wandb.run.dir, "linear-bert-uncased.pt"))

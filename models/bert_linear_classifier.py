@@ -14,8 +14,8 @@ from allennlp.modules.token_embedders import TokenEmbedder
 log = logging.getLogger(__name__)
 
 
-# @Model.register('single_layer_lstm')
-class SingleLayerLSTMClassifier(Model):
+# @Model.register('bert_linear_classifier')
+class BertLinearClassifier(Model):
     def __init__(self,
                  vocab: Vocabulary,
                  embedder: TokenEmbedder,
