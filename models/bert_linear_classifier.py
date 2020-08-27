@@ -1,7 +1,6 @@
-import wandb
 import torch
 import logging
-from typing import Dict
+from typing import Any, Dict
 from allennlp.nn import util
 from allennlp.models import Model
 from allennlp.data import Vocabulary
@@ -13,14 +12,17 @@ from allennlp.modules.token_embedders import TokenEmbedder
 # Logger setup.
 log = logging.getLogger(__name__)
 
-wandb.init(entity="dunkelhaus", project="oos-detect")
 
-# @Model.register('single_layer_lstm')
-class SingleLayerLSTMClassifier(Model):
-    def __init__(self,
-                 vocab: Vocabulary,
-                 embedder: TokenEmbedder,
-                 encoder: Seq2VecEncoder):
+# @Model.register('bert_linear_classifier')
+class BertLinearClassifier(Model):
+
+    def __init__(
+            self,
+            vocab: Vocabulary,
+            embedder: TokenEmbedder,
+            encoder: Seq2VecEncoder,
+            wbrun: Any
+    ):
         super().__init__(vocab)
         self.embedder = embedder
         self.encoder = encoder
@@ -31,12 +33,14 @@ class SingleLayerLSTMClassifier(Model):
             num_labels
         )
         self.accuracy = CategoricalAccuracy()
+        wbrun.watch(self.classifier, log=all)
         log.debug("Model init complete.")
 
-    def forward(self,
-                sentence: TextFieldTensors,
-                label: torch.Tensor = None
-        ) -> Dict[str, torch.Tensor]:
+    def forward(
+            self,
+            sentence: TextFieldTensors,
+            label: torch.Tensor = None
+    ) -> Dict[str, torch.Tensor]:
         # Shape: (batch_size, num_tokens, embedding_dim)
         # log.debug(f"Forward pass starting. Sentence Dict: {sentence!r}")
 
@@ -62,10 +66,11 @@ class SingleLayerLSTMClassifier(Model):
         if label is not None:
             self.accuracy(logits, label)
             output['loss'] = torch.nn.functional.cross_entropy(logits, label)
+            """log.debug("Calling wandb.log")
             wandb.log({
                 "loss": output['loss'],
                 "accuracy": self.accuracy.get_metric(reset=False)
-            })
+            })"""
         return output
 
     def get_metrics(self, reset: bool = False) -> Dict[str, float]:

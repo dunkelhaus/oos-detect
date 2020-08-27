@@ -12,31 +12,40 @@ LOGGING_CONFIG = {
             'class': 'logging.Formatter',
             'style': '{',
             'datefmt': '%I:%M:%S',
-            'format': '{levelname:8s}; {asctime:s}; {name:<15s} {lineno:4d}; {message:s}'
+            'format': '{levelname:8s}; {asctime:s}; '
+                      '{name:<15s} {lineno:4d}; {message:s}'
         },
         'multi-process': {
             'class': 'logging.Formatter',
             'style': '{',
             'datefmt': '%I:%M:%S',
-            'format': '{levelname:8s}; {process:5d}; {asctime:s}; {name:<15s} {lineno:4d}; {message:s}'
+            'format': '{levelname:8s}; {process:5d}; '
+                      '{asctime:s}; {name:<15s} {lineno:4d}; '
+                      '{message:s}'
         },
         'multi-thread': {
             'class': 'logging.Formatter',
             'style': '{',
             'datefmt': '%I:%M:%S',
-            'format': '{levelname:8s}; {threadName:5d}; {asctime:s}; {name:<15s} {lineno:4d}; {message:s}'
+            'format': '{levelname:8s}; {threadName:5d}; '
+                      '{asctime:s}; {name:<15s} {lineno:4d}; '
+                      '{message:s}'
         },
         'verbose': {
             'class': 'logging.Formatter',
             'style': '{',
             'datefmt': '%I:%M:%S',
-            'format': '{levelname:8s}; {process:5d}; {threadName:8s}; {asctime:s}; {name:<15s} {lineno:4d}; {message:s}'
+            'format': '{levelname:8s}; {process:5d}; '
+                      '{threadName:8s}; {asctime:s}; '
+                      '{name:<15s} {lineno:4d}; {message:s}'
         },
         'multiline': {
             'class': 'logging.Formatter',
             'style': '{',
             'datefmt': '%I:%M:%S',
-            'format': '{levelname:8s}\n{process:5d}\n{threadName:8s}\n{asctime:s}\n{name:<15s}{lineno:4d}\n{message:s}\n'
+            'format': '{levelname:8s}\n{process:5d}\n'
+                      '{threadName:8s}\n{asctime:s}\n'
+                      '{name:<15s}{lineno:4d}\n{message:s}\n'
         }
     },
     'handlers': {
@@ -44,7 +53,7 @@ LOGGING_CONFIG = {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',
             'formatter': 'brief',
-            'stream' : 'ext://sys.stdout'
+            'stream': 'ext://sys.stdout'
         },
         'info_file_handler': {
             'level': 'INFO',

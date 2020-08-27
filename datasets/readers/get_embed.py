@@ -1,9 +1,13 @@
 import torch
-import logging
 import numpy as np
-
+from pandas import pd
+from prefect import task
+from typing import List, Tuple
 from transformers import BertTokenizer, BertModel
+
+# import logging
 # logging.basicConfig(level=logging.INFO)
+
 
 @task
 def get_hidden_states(
@@ -33,18 +37,19 @@ def get_hidden_states(
         sent_i = 0
 
         print(f"Number of layers: {len(hidden_states[sent_i])} "
-            "(initial embeddings + 12 BERT layers)")
+              "(initial embeddings + 12 BERT layers)")
         layer_i = 0
 
-        print(f"Number of batches: {len(hidden_states[sent_i][layer_i])}")
+        print(f"Number of batches: "
+              f"{len(hidden_states[sent_i][layer_i])}")
         batch_i = 0
 
         print(f"Number of tokens: "
-            f"{len(hidden_states[sent_i][layer_i][batch_i])}")
+              f"{len(hidden_states[sent_i][layer_i][batch_i])}")
         token_i = 0
 
         print(f"Number of hidden units: "
-            f"{len(hidden_states[sent_i][layer_i][batch_i][token_i])}")
+              f"{len(hidden_states[sent_i][layer_i][batch_i][token_i])}")
 
     return hidden_states
 
@@ -59,7 +64,7 @@ def load_bert() -> BertModel:
     # Load pre-trained model (weights)
     model = BertModel.from_pretrained(
         'bert-base-uncased',
-        output_hidden_states = True,
+        output_hidden_states=True,
         # Whether the model returns all hidden-states.
     )
 
@@ -99,7 +104,7 @@ def tokenize_bert(sents: pd.DataFrame) -> List:
 def _tokenize_bert_sentence(
         text: str,
         tokenizer: BertTokenizer
-    ) -> Tuple:
+) -> Tuple:
     """
     Given a sentence and a BertTokenizer, tokenizes the text, maps to
     BERT vocab indices, and make the segment IDs for the tokens before
@@ -110,9 +115,6 @@ def _tokenize_bert_sentence(
     :return token_tensor, segments_tensor: The tensors containing the
                     segment IDs and the tokens themselves. On GPU.
     """
-    # Add the special tokens.
-    marked_text = "[CLS] " + text + " [SEP]"
-
     # Split the sentence into tokens.
     tokenized_text = tokenizer.encode(
         text,
@@ -123,7 +125,7 @@ def _tokenize_bert_sentence(
     indexed_tokens = tokenizer.convert_tokens_to_ids(tokenized_text)
 
     # Mark each of the tokens as belonging to sentence "1" (single
-    ##  sentence).
+    #  sentence).
     segments_ids = [1] * len(tokenized_text)
 
     # Convert inputs to PyTorch tensors, place on GPU.

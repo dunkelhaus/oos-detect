@@ -14,7 +14,7 @@ def locate_oos_data() -> Path:
     """
     log.debug("Locating CLINC data directory.")
     path = (Path(__file__).parent.parent
-        .absolute()/"datasets/oos-eval/data")
+            .absolute()/"datasets/oos-eval/data")
 
     if path.is_dir():
         return path
@@ -34,7 +34,7 @@ def locate_results_dir() -> Path:
     log.debug("Locating results directory.")
 
     path = (Path(__file__).parent.parent
-        .absolute()/"train/results")
+            .absolute()/"train/results")
 
     print(path)
     print(path.exists())
@@ -43,6 +43,6 @@ def locate_results_dir() -> Path:
         return path
     else:
         log.debug("Failed! Please create the directory "
-                        "oos-detect/train/results.")
+                  "oos-detect/train/results.")
 
     return

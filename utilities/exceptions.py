@@ -8,13 +8,11 @@ class Error(Exception):
     pass
 
 
-
 class DataSetPortionMissingError(Error):
     """
     Raised when portion in dataset JSON is missing.
     """
     pass
-
 
 
 class ReqdFileNotInSetError(Error):
