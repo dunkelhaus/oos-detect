@@ -1,6 +1,6 @@
 import pytest
-import logging.config
 from pathlib import Path
+# import logging.config
 # from configs.log.log_conf import LOGGING_CONFIG
 
 # --- Universal logger setup - startup task ---

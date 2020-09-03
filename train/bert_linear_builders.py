@@ -204,10 +204,17 @@ def build_model(vocab: Vocabulary, wbrun: Any) -> Model:
     log.debug("Building the model.")
     # vocab_size = vocab.get_vocab_size("tokens")
 
+    # TokenEmbedder object.
     bert_embedder = PretrainedTransformerEmbedder("bert-base-uncased")
+
+    # TextFieldEmbedder that wraps TokenEmbedder objects. Each
+    # TokenEmbedder output from one TokenIndexer--the data produced
+    # by a TextField is a dict {names:representations}, hence
+    # TokenEmbedders have corresponding names.
     embedder: TextFieldEmbedder = BasicTextFieldEmbedder(
         {"tokens": bert_embedder}
     )
+
     log.debug("Embedder built.")
     encoder = BertPooler("bert-base-uncased", requires_grad=True)
     # encoder = PytorchSeq2VecWrapper(torch.nn.LSTM(768,20,batch_first=True))

@@ -1,3 +1,6 @@
 [submodule "datasets/oos-eval"]
 	path = datasets/oos-eval
 	url = https://github.com/dunkelhaus/oos-eval-allenfriendly.git
+[submodule "models/pseudo-ood-generation"]
+	path = models/pseudo-ood-generation
+	url = https://github.com/dunkelhaus/pseudo-ood-generation.git
