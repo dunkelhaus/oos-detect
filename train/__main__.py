@@ -38,4 +38,4 @@ preds = predictor.predict_batch_instance(
             )
         )
 
-print(preds)
+# print(preds)
