@@ -1,16 +1,18 @@
 import wandb
 import logging
-from typing import Tuple, Iterable
+from typing import Tuple
+from typing import Iterable
+from allennlp.data import Instance
+from allennlp.data import DatasetReader
 from allennlp.training.util import evaluate
 from utilities.locate import locate_oos_data
 from utilities.locate import locate_results_dir
-from allennlp.data import Instance, DatasetReader
-from train.bert_linear_builders import build_model
-from train.bert_linear_builders import build_vocab
-from train.builders import build_train_data_loaders
-from train.bert_linear_builders import build_trainer
-from train.bert_linear_builders import build_data_loader
-from train.bert_linear_builders import build_dataset_reader
+from models.bert_linear.builders import build_model
+from models.bert_linear.builders import build_vocab
+from models.bert_linear.builders import build_trainer
+from models.bert_linear.builders import build_data_loader
+from models.bert_linear.builders import build_dataset_reader
+from models.bert_linear.builders import build_train_data_loaders
 
 # Logger setup.
 # from configs.log.log_conf import LOGGING_CONFIG
