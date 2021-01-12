@@ -51,6 +51,8 @@ def run_training_loop(run_test: bool = False):
     # functionality added.
     train_data, dev_data = read_data(dataset_reader)
 
+    print(f"Example training instance: {train_data[0]}.")
+
     vocab = build_vocab(train_data + dev_data)
     model = build_model(vocab, wbrun)
 
@@ -94,6 +96,8 @@ def run_training_loop(run_test: bool = False):
     trainer.train()
 
     if run_test:
+        print("Running over test set for evaluation.")
+
         test_data = dataset_reader.read(
             locate_oos_data()/"data_full_test.json"
         )
@@ -104,7 +108,7 @@ def run_training_loop(run_test: bool = False):
             shuffle=False
         )
         results = evaluate(model, test_data_loader, cuda_device=0)
-        print(results)
+        print(f"Test results: {results}.")
         # log.info(results)
 
     # wandb.join()
