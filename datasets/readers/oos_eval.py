@@ -54,7 +54,9 @@ class OOSEvalReader(DatasetReader):
         sentence_field = TextField(tokens, self.token_indexers)
         fields = {"sentence": sentence_field}
 
+        # lab = LabelField(label)
         fields["label"] = LabelField(label)
+        # print(f"Just read: {lab.label}, {type(lab.label)}")
 
         return Instance(fields)
 
