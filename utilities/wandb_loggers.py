@@ -45,6 +45,7 @@ class LogBatchMetricsToWandb(BatchCallback):
         trainer: Trainer,
         batch_inputs: List[List["TensorDict"]],
         batch_outputs: List[Dict[str, Any]],
+        batch_metrics: Dict[str, Any],
         epoch: int,
         batch_number: int,
         is_training: bool,
@@ -64,6 +65,7 @@ class LogBatchMetricsToWandb(BatchCallback):
                 >= self.batch_end_log_freq):
             log.info("Writing metrics for the batch to wandb")
             print(f"Batch outputs are: {batch_outputs!r}")
+            print(f"Batch metrics are: {batch_metrics!r}")
 
             batch_outputs = [{
                 key: value.cpu()
@@ -75,6 +77,7 @@ class LogBatchMetricsToWandb(BatchCallback):
             self.wandb.log(
                 {
                     **batch_outputs[0],
+                    **batch_metrics
                 },
                 step=self.current_batch_num,
             )
