@@ -23,7 +23,7 @@ from allennlp.predictors import TextClassifierPredictor
 # a trained model.
 
 
-model, dataset_reader = run_training_loop(run_test=False)
+model, dataset_reader = run_training_loop(run_test=True)
 
 predictor = TextClassifierPredictor(
     model=model,
@@ -38,4 +38,4 @@ preds = predictor.predict_batch_instance(
             )
         )
 
-# print(preds)
+print(preds)

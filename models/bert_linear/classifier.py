@@ -57,7 +57,7 @@ class BertLinearClassifier(Model):
         logits = self.classifier(encoded_text)
         log.debug("Ran the classifier.")
         # Shape: (batch_size, num_labels)
-        probs = torch.nn.functional.softmax(logits)
+        probs = torch.nn.functional.softmax(logits, dim=1)
         # Shape: (1,)
         output = {'probs': probs}
 

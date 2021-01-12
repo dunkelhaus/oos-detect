@@ -1,3 +1,4 @@
+import torch
 import logging.config
 from allennlp.training.trainer import Trainer
 from typing import Any, List, Dict, Tuple, Iterable, Optional
@@ -42,7 +43,7 @@ class LogBatchMetricsToWandb(BatchCallback):
     def __call__(
         self,
         trainer: Trainer,
-        batch_inputs: List[List[TensorDict]],
+        batch_inputs: List[List["TensorDict"]],
         batch_outputs: List[Dict[str, Any]],
         epoch: int,
         batch_number: int,

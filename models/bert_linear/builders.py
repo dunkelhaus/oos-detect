@@ -12,7 +12,7 @@ from models.bert_linear.classifier import BertLinearClassifier
 from allennlp.training.optimizers import HuggingfaceAdamWOptimizer
 from typing import Any, List, Dict, Tuple, Iterable, Optional
 from allennlp.modules.seq2vec_encoders.bert_pooler import BertPooler
-from allennlp.training.trainer import Trainer, GradientDescentTrainer
+from allennlp.training.trainer import Trainer, GradientDescentTrainer, EpochCallback, BatchCallback
 from allennlp.modules.text_field_embedders import TextFieldEmbedder
 from allennlp.modules.text_field_embedders import BasicTextFieldEmbedder
 from allennlp.modules.token_embedders import PretrainedTransformerEmbedder

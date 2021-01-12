@@ -36,8 +36,7 @@ def locate_results_dir() -> Path:
     path = (Path(__file__).parent.parent
             .absolute()/"train/results")
 
-    print(path)
-    print(path.exists())
+    print(f"Results directory is: {path}, exists: {path.exists()}.")
 
     if path.exists():
         return path
