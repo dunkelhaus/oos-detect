@@ -8,13 +8,10 @@
 
 # import wandb
 import pprint
-import numpy as np
-from dataclasses import dataclass
+import pandas as pd
+from train.metrics import get_metrics
 from train.loop import run_training_loop
-from utilities.locate import locate_oos_data
-from allennlp.predictors import TextClassifierPredictor
-from sklearn.metrics import precision_recall_fscore_support
-from sklearn.metrics import confusion_matrix
+from train.predict import get_test_predictions
 
 # Logger setup.
 # log = logging.getLogger(__name__)
@@ -28,68 +25,17 @@ from sklearn.metrics import confusion_matrix
 # a trained model.
 
 
-@dataclass
-class PerClassStats:
-    tp: int = 0
-    fp: int = 0
-    tn: int = 0
-    fn: int = 0
-    total: int = 0
-    accuracy: float = 0.
-    precision: float = 0.
-    recall: float = 0.
-    f1: float = 0.
-
-
 # pp = pprint.PrettyPrinter(indent=4)
 model, dataset_reader = run_training_loop(run_test=False)
 
-predictor = TextClassifierPredictor(
-    model=model,
-    dataset_reader=dataset_reader
-)
-
-test_data = list(
-    dataset_reader.read(
-        locate_oos_data()/"data_full_test.json"
-    )
-)
-
-print(f"Example test instance: {test_data[0]}.")
-
-preds = predictor.predict_batch_instance(test_data)
-
-labelmap = predictor._model.vocab.get_index_to_token_vocabulary('labels')
-
-print(f"Label map: {labelmap}")
-
-print(f"Instance predictions made: {len(preds)}.")
-print(f"First prediction: {preds[0]}")
-
-predictions = [labelmap[np.argmax(l['probs'])] for l in preds]
-actuals = [str(i['label'].label) for i in test_data]
-
-labs = list(labelmap.values())
-print(labs)
-
-results = precision_recall_fscore_support(
-    actuals,
-    predictions,
-    average=None,
-    labels=labs
+actuals, predictions, labels = get_test_predictions(
+    model,
+    dataset_reader
 )
 
 
+print("\n\n=====   Multiclass Classification Report   =====")
+df = get_metrics(actuals, predictions, labels)
 
-# Per-label accuracy
-ACC = (TP + TN) / (TP + FP + FN + TN)
-
-for i in range(len(labs)):
-    print("=====   Multiclass Classification Report   =====")
-
-
-
-
-# print("sklearn results are below: ")
-# print(results)
-# pprint.pprint(per_class_matches)
+with pd.option_context('display.max_rows', None):
+    print(df)
