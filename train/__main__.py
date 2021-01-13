@@ -7,10 +7,14 @@
 # logging.getLogger("transformers").setLevel(logging.DEBUG)
 
 # import wandb
+import pprint
 import numpy as np
+from dataclasses import dataclass
 from train.loop import run_training_loop
 from utilities.locate import locate_oos_data
 from allennlp.predictors import TextClassifierPredictor
+from sklearn.metrics import precision_recall_fscore_support
+from sklearn.metrics import confusion_matrix
 
 # Logger setup.
 # log = logging.getLogger(__name__)
@@ -24,6 +28,20 @@ from allennlp.predictors import TextClassifierPredictor
 # a trained model.
 
 
+@dataclass
+class PerClassStats:
+    tp: int = 0
+    fp: int = 0
+    tn: int = 0
+    fn: int = 0
+    total: int = 0
+    accuracy: float = 0.
+    precision: float = 0.
+    recall: float = 0.
+    f1: float = 0.
+
+
+# pp = pprint.PrettyPrinter(indent=4)
 model, dataset_reader = run_training_loop(run_test=False)
 
 predictor = TextClassifierPredictor(
@@ -48,18 +66,30 @@ print(f"Label map: {labelmap}")
 print(f"Instance predictions made: {len(preds)}.")
 print(f"First prediction: {preds[0]}")
 
-# Logits to labels.
-for l in preds:
-    # print(l)
-    argind = np.argmax(l['probs'])
-    # print(argind)
-    lab = labelmap[argind]
-    # print(lab)
-    l['predicted'] = lab
+predictions = [labelmap[np.argmax(l['probs'])] for l in preds]
+actuals = [str(i['label'].label) for i in test_data]
 
-#preds['predicted'] = [labelmap[np.argmax(l['probs'])] for l in preds]
+labs = list(labelmap.values())
+print(labs)
 
-# pr = predictor.predictions_to_labeled_instances(test_data[0], preds[0])
+results = precision_recall_fscore_support(
+    actuals,
+    predictions,
+    average=None,
+    labels=labs
+)
 
-for i in range(len(preds)):
-    print(f"Instance: {test_data[i]}; Prediction: {preds[i]['predicted']}")
+
+
+# Per-label accuracy
+ACC = (TP + TN) / (TP + FP + FN + TN)
+
+for i in range(len(labs)):
+    print("=====   Multiclass Classification Report   =====")
+
+
+
+
+# print("sklearn results are below: ")
+# print(results)
+# pprint.pprint(per_class_matches)
