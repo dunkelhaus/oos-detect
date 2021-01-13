@@ -80,9 +80,6 @@ def run_training_loop(run_test: bool = False):
 
     wandb.watch(model, log="all")
 
-    # You obviously won't want to create a temporary file for your
-    # training results, but for execution in binder for this guide, we
-    # need to do this.
     trainer = build_trainer(
         model,
         serialization_dir,
