@@ -7,7 +7,6 @@
 # logging.getLogger("transformers").setLevel(logging.DEBUG)
 
 # import wandb
-import pprint
 import pandas as pd
 from train.run import run_training
 from train.metrics import get_metrics
