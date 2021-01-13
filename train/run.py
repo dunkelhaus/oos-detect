@@ -103,6 +103,8 @@ def run_testing(
     print(f"Test results: {results}.")
     # log.info(results)
 
+    return model
+
 
 if __name__ == '__main__':
     # import logging.config
