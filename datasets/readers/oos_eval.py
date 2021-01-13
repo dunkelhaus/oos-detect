@@ -2,18 +2,41 @@ import os
 import json
 import logging
 import numpy as np
-from typing import Dict, List, Iterator
+from allennlp.data import Instance
+from utilities.locate import locate_oos_data
 from allennlp.data.tokenizers import Tokenizer
 from allennlp.data import DatasetReader, Instance
 from allennlp.data.token_indexers import TokenIndexer
 from utilities.exceptions import ReqdFileNotInSetError
 from allennlp.data.fields import LabelField, TextField
+from typing import Dict, List, Iterator, Tuple, Iterable
 from utilities.exceptions import DataSetPortionMissingError
 from allennlp.data.tokenizers import PretrainedTransformerTokenizer
 from allennlp.data.token_indexers import PretrainedTransformerIndexer
 
 # Logger setup.
 log = logging.getLogger(__name__)
+
+
+def read_full_train_data(
+        reader: DatasetReader
+) -> Tuple[Iterable[Instance], Iterable[Instance]]:
+    print("Reading full training & validation data.")
+    path = locate_oos_data()
+    training_data = reader.read(path/"data_full_train.json")
+    validation_data = reader.read(path/"data_full_val.json")
+    return training_data, validation_data
+
+
+def read_full_test_data(
+        reader: DatasetReader
+) -> Tuple[Iterable[Instance], Iterable[Instance]]:
+    print("Reading full test data.")
+    path = locate_oos_data()
+    test_data = reader.read(
+        locate_oos_data()/"data_full_test.json"
+    )
+    return test_data
 
 
 # @DatasetReader.register('oos-eval-reader')
@@ -54,7 +77,9 @@ class OOSEvalReader(DatasetReader):
         sentence_field = TextField(tokens, self.token_indexers)
         fields = {"sentence": sentence_field}
 
+        # lab = LabelField(label)
         fields["label"] = LabelField(label)
+        # print(f"Just read: {lab.label}, {type(lab.label)}")
 
         return Instance(fields)
 

@@ -7,9 +7,16 @@
 # logging.getLogger("transformers").setLevel(logging.DEBUG)
 
 # import wandb
-from train.loop import run_training_loop
-from utilities.locate import locate_oos_data
-from allennlp.predictors import TextClassifierPredictor
+import pandas as pd
+from train.run import run_testing
+from train.run import run_training
+from train.metrics import get_metrics
+from train.predict import get_predictions
+from datasets.readers.oos_eval import OOSEvalReader
+from datasets.readers.oos_eval import read_full_test_data
+from datasets.readers.oos_eval import read_full_train_data
+from models.bert_linear.builders import bert_linear_builders
+
 
 # Logger setup.
 # log = logging.getLogger(__name__)
@@ -22,20 +29,31 @@ from allennlp.predictors import TextClassifierPredictor
 # model code, above in the Setup section. We run the training loop to get
 # a trained model.
 
+def train_test_pred_oos_full_bert_linear(run_test=False):
+    dataset_reader = OOSEvalReader()
+    train_data = read_full_train_data(reader=dataset_reader)
+    test_data = read_full_test_data(reader=dataset_reader)
 
-model, dataset_reader = run_training_loop(run_test=False)
+    # pp = pprint.PrettyPrinter(indent=4)
+    model = run_training(
+        data=train_data,
+        model_builder=bert_linear_builders
+    )
 
-predictor = TextClassifierPredictor(
-    model=model,
-    dataset_reader=dataset_reader
-)
+    if run_test:
+        model = run_testing(test_data, model)
 
-preds = predictor.predict_batch_instance(
-            list(
-                dataset_reader.read(
-                    locate_oos_data()/"data_full_test.json"
-                )
-            )
-        )
+    actuals, predictions, labels = get_predictions(
+        model,
+        dataset_reader,
+        list(test_data)
+    )
 
-print(preds)
+    return actuals, predictions, labels
+
+actuals, predictions, labels = train_test_pred_oos_full_bert_linear(run_test=False)
+df = get_metrics(actuals, predictions, labels)
+
+with pd.option_context('display.max_rows', None):
+    print("\n\n=====   Multiclass Classification Report   =====")
+    print(df)

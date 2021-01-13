@@ -1,56 +1,48 @@
 import wandb
 import logging
-from typing import Tuple, Iterable
-from train.builders import build_model
-from train.builders import build_vocab
-from train.builders import build_trainer
+from typing import Tuple
+from typing import Iterable
+from allennlp.models import Model
+from allennlp.data import Instance
+from allennlp.data import DatasetReader
+from models.builders import build_vocab
 from allennlp.training.util import evaluate
-from utilities.locate import locate_oos_data
-from train.builders import build_data_loader
-from train.builders import build_dataset_reader
+from models.builders import build_data_loader
 from utilities.locate import locate_results_dir
-from allennlp.data import Instance, DatasetReader
-from train.builders import build_train_data_loaders
+from models.builders import build_train_data_loaders
 
 # Logger setup.
 # from configs.log.log_conf import LOGGING_CONFIG
 log = logging.getLogger(__name__)
 
 
-def read_data(
-        reader: DatasetReader
-) -> Tuple[Iterable[Instance], Iterable[Instance]]:
-    print("Reading data")
-    path = locate_oos_data()
-    training_data = reader.read(path/"data_full_train.json")
-    validation_data = reader.read(path/"data_full_val.json")
-    return training_data, validation_data
-
-
-def run_training_loop(run_test: bool = False):
+def run_training(
+        data: Tuple[Iterable[Instance], Iterable[Instance]],
+        model_builder
+) -> Model:
     wbrun = wandb.init(
         project="oos-detect",
         sync_tensorboard=False,
         name="dunkrun"
     )
+    print("Running over training set.")
     # wandb.tensorboard.patch(save=True, tensorboardX=False)
     batch_size = 64
     lr = 0.0001
     num_epochs = 5
+    train_data, dev_data = data
 
     # wbconf = wandb.config
 
     # wbconf.no_cuda = False
     # wbconf.log_interval = 10
     # log.debug(f"WandB config: {wandb.config!r}")
-    dataset_reader = build_dataset_reader()
 
     # These are a subclass of pytorch Datasets, with some allennlp-specific
     # functionality added.
-    train_data, dev_data = read_data(dataset_reader)
+    print(f"Example training instance: {train_data[0]}.")
 
     vocab = build_vocab(train_data + dev_data)
-    model = build_model(vocab, wbrun)
 
     # This is the allennlp-specific functionality in the Dataset object;
     # we need to be able convert strings in the data to integers, and
@@ -74,42 +66,44 @@ def run_training_loop(run_test: bool = False):
         log.info("Failed to locate results directory, stopping.")
         return
 
-    wandb.watch(model, log="all")
-
-    # You obviously won't want to create a temporary file for your
-    # training results, but for execution in binder for this guide, we
-    # need to do this.
-    trainer = build_trainer(
-        model,
+    model, trainer = model_builder(
         serialization_dir,
         train_loader,
         dev_loader,
-        lr=lr,
-        num_epochs=num_epochs,
-        wbrun=wbrun
+        lr,
+        num_epochs,
+        vocab,
+        wbrun
     )
 
-    trainer.train()
+    wandb.watch(model, log="all")
 
-    if run_test:
-        test_data = dataset_reader.read(
-            locate_oos_data()/"data_full_test.json"
-        )
-        test_data.index_with(model.vocab)
-        test_data_loader = build_data_loader(
-            test_data,
-            batch_size=8,
-            shuffle=False
-        )
-        results = evaluate(model, test_data_loader, cuda_device=0)
-        print(results)
-        # log.info(results)
+    trainer.train()
 
     # wandb.join()
     # torch.save(model.state_dict(), os.path.join(wandb.run.dir,
     # "linear-bert-uncased.pt"))
 
-    return model, dataset_reader
+    return model
+
+
+def run_testing(
+        data: Iterable[Instance],
+        model: Model
+) -> Model:
+    print("Running over test set.")
+
+    data.index_with(model.vocab)
+    test_data_loader = build_data_loader(
+        data,
+        batch_size=8,
+        shuffle=False
+    )
+    results = evaluate(model, test_data_loader, cuda_device=0)
+    print(f"Test results: {results}.")
+    # log.info(results)
+
+    return model
 
 
 if __name__ == '__main__':
@@ -125,4 +119,4 @@ if __name__ == '__main__':
     # log = logging.getLogger(__name__)
     # log.debug("Logging is configured.")
 
-    model, dataset_reader = run_training_loop()
+    model, dataset_reader = run_training()
