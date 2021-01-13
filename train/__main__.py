@@ -8,6 +8,7 @@
 
 # import wandb
 import pandas as pd
+from train.run import run_testing
 from train.run import run_training
 from train.metrics import get_metrics
 from train.predict import get_predictions
@@ -50,7 +51,7 @@ def train_test_pred_oos_full_bert_linear(run_test=False):
 
     return actuals, predictions, labels
 
-actuals, predictions, labels = train_test_pred_oos_full_bert_linear()
+actuals, predictions, labels = train_test_pred_oos_full_bert_linear(run_test=False)
 df = get_metrics(actuals, predictions, labels)
 
 with pd.option_context('display.max_rows', None):
