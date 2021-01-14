@@ -4,7 +4,6 @@ from typing import Tuple
 from typing import Iterable
 from allennlp.models import Model
 from allennlp.data import Instance
-from allennlp.data import DatasetReader
 from models.builders import build_vocab
 from allennlp.training.util import evaluate
 from models.builders import build_data_loader
