@@ -13,8 +13,7 @@ from train.run import run_training
 from train.metrics import get_metrics
 from train.predict import get_predictions
 from datasets.readers.oos_eval import OOSEvalReader
-from datasets.readers.oos_eval import read_full_test_data
-from datasets.readers.oos_eval import read_full_train_data
+from datasets.readers.oos_eval import read_oos_data
 from models.bert_linear.builders import bert_linear_builders
 
 
@@ -29,15 +28,18 @@ from models.bert_linear.builders import bert_linear_builders
 # model code, above in the Setup section. We run the training loop to get
 # a trained model.
 
-def train_test_pred_oos_full_bert_linear(run_test=False):
+def train_test_pred__bert_linear(run_test=False, set="full", model_name="dunkrun"):
     dataset_reader = OOSEvalReader()
-    train_data = read_full_train_data(reader=dataset_reader)
-    test_data = read_full_test_data(reader=dataset_reader)
+    train_data, test_data = read_oos_data(
+        reader=dataset_reader,
+        set=set
+    )
 
     # pp = pprint.PrettyPrinter(indent=4)
     model = run_training(
         data=train_data,
-        model_builder=bert_linear_builders
+        model_builder=bert_linear_builders,
+        run_name=(model_name + "_" + set)
     )
 
     if run_test:
@@ -51,7 +53,7 @@ def train_test_pred_oos_full_bert_linear(run_test=False):
 
     return actuals, predictions, labels
 
-actuals, predictions, labels = train_test_pred_oos_full_bert_linear(run_test=False)
+actuals, predictions, labels = train_test_pred__bert_linear(run_test=True, set="small", model_name="bert_linear")
 df = get_metrics(actuals, predictions, labels)
 
 with pd.option_context('display.max_rows', None):
