@@ -18,18 +18,19 @@ log = logging.getLogger(__name__)
 
 def run_training(
         data: Tuple[Iterable[Instance], Iterable[Instance]],
-        model_builder
+        model_builder,
+        run_name: str
 ) -> Model:
     wbrun = wandb.init(
         project="oos-detect",
         sync_tensorboard=False,
-        name="dunkrun"
+        name=run_name
     )
     print("Running over training set.")
     # wandb.tensorboard.patch(save=True, tensorboardX=False)
     batch_size = 64
     lr = 0.0001
-    num_epochs = 5
+    num_epochs = 2
     train_data, dev_data = data
 
     # wbconf = wandb.config
