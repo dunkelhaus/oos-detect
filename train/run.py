@@ -38,8 +38,6 @@ def run_training(
     # wbconf.log_interval = 10
     # log.debug(f"WandB config: {wandb.config!r}")
 
-    # These are a subclass of pytorch Datasets, with some allennlp-specific
-    # functionality added.
     print(f"Example training instance: {train_data[0]}.")
 
     vocab = build_vocab(train_data + dev_data)
