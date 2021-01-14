@@ -18,24 +18,47 @@ from allennlp.data.token_indexers import PretrainedTransformerIndexer
 log = logging.getLogger(__name__)
 
 
-def read_full_train_data(
-        reader: DatasetReader
+def read_oos_data(
+        reader: DatasetReader,
+        set: str
+) -> Tuple[Tuple[Iterable[Instance], Iterable[Instance]], Iterable[Instance]]:
+    if set not in {"oos_plus", "imbalanced", "full", "small"}:
+        print("Incorrect dataset mentioned, ending.")
+        return
+
+    print(f"Reading the oos_{set} dataset.")
+    train_data = read_train_data(reader, set)
+    test_data = read_test_data(reader, set)
+
+    return train_data, test_data
+
+
+def read_train_data(
+        reader: DatasetReader,
+        set: str
 ) -> Tuple[Iterable[Instance], Iterable[Instance]]:
-    print("Reading full training & validation data.")
+    train_file_name = f"data_{set}_train.json"
+    val_file_name = f"data_{set}_val.json"
+    print(f"Reading training & validation data from "
+            f"{train_file_name} and {val_file_name}.")
+
     path = locate_oos_data()
-    training_data = reader.read(path/"data_full_train.json")
-    validation_data = reader.read(path/"data_full_val.json")
+    training_data = reader.read(path/train_file_name)
+    validation_data = reader.read(path/val_file_name)
+
     return training_data, validation_data
 
 
-def read_full_test_data(
-        reader: DatasetReader
+def read_test_data(
+        reader: DatasetReader,
+        set: str
 ) -> Tuple[Iterable[Instance], Iterable[Instance]]:
-    print("Reading full test data.")
+    test_file_name = f"data_{set}_test.json"
+    print(f"Reading test data from {test_file_name}.")
+
     path = locate_oos_data()
-    test_data = reader.read(
-        locate_oos_data()/"data_full_test.json"
-    )
+    test_data = reader.read(path/test_file_name)
+
     return test_data
 
 
