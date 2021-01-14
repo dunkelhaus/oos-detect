@@ -4,7 +4,6 @@ from typing import Tuple
 from typing import Iterable
 from allennlp.models import Model
 from allennlp.data import Instance
-from allennlp.data import DatasetReader
 from models.builders import build_vocab
 from allennlp.training.util import evaluate
 from models.builders import build_data_loader
@@ -18,18 +17,19 @@ log = logging.getLogger(__name__)
 
 def run_training(
         data: Tuple[Iterable[Instance], Iterable[Instance]],
-        model_builder
+        model_builder,
+        run_name: str
 ) -> Model:
     wbrun = wandb.init(
         project="oos-detect",
         sync_tensorboard=False,
-        name="dunkrun"
+        name=run_name
     )
     print("Running over training set.")
     # wandb.tensorboard.patch(save=True, tensorboardX=False)
     batch_size = 64
     lr = 0.0001
-    num_epochs = 5
+    num_epochs = 2
     train_data, dev_data = data
 
     # wbconf = wandb.config
@@ -38,8 +38,6 @@ def run_training(
     # wbconf.log_interval = 10
     # log.debug(f"WandB config: {wandb.config!r}")
 
-    # These are a subclass of pytorch Datasets, with some allennlp-specific
-    # functionality added.
     print(f"Example training instance: {train_data[0]}.")
 
     vocab = build_vocab(train_data + dev_data)

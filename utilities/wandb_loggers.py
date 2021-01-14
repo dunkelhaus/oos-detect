@@ -1,7 +1,8 @@
 import torch
 import logging.config
+from typing import Any, List, Dict, Optional
 from allennlp.training.trainer import Trainer
-from typing import Any, List, Dict, Tuple, Iterable, Optional
+from allennlp.data.dataloader import TensorDict
 from allennlp.training.trainer import EpochCallback, BatchCallback
 
 # Logger setup.
@@ -34,7 +35,7 @@ class LogBatchMetricsToWandb(BatchCallback):
             wbconf = {}
             wbconf["batch_size"] = 64
             wbconf["lr"] = 0.0001
-            wbconf["num_epochs"] = 5
+            wbconf["num_epochs"] = 2
             wbconf["no_cuda"] = False
             wbconf["log_interval"] = 10
             self.config = wbconf
@@ -43,7 +44,7 @@ class LogBatchMetricsToWandb(BatchCallback):
     def __call__(
         self,
         trainer: Trainer,
-        batch_inputs: List[List["TensorDict"]],
+        batch_inputs: List[List[TensorDict]],
         batch_outputs: List[Dict[str, Any]],
         batch_metrics: Dict[str, Any],
         epoch: int,
@@ -63,9 +64,9 @@ class LogBatchMetricsToWandb(BatchCallback):
         if (is_master
                 and (self.current_batch_num - self.previous_logged_batch)
                 >= self.batch_end_log_freq):
-            log.info("Writing metrics for the batch to wandb")
-            print(f"Batch outputs are: {batch_outputs!r}")
-            print(f"Batch metrics are: {batch_metrics!r}")
+            # print("Writing metrics for the batch to wandb.")
+            # print(f"Batch outputs are: {batch_outputs!r}")
+            # print(f"Batch metrics are: {batch_metrics!r}")
 
             batch_outputs = [{
                 key: value.cpu()
@@ -78,8 +79,7 @@ class LogBatchMetricsToWandb(BatchCallback):
                 {
                     **batch_outputs[0],
                     **batch_metrics
-                },
-                step=self.current_batch_num,
+                }
             )
             self.previous_logged_batch = self.current_batch_num
 
@@ -111,7 +111,7 @@ class LogMetricsToWandb(EpochCallback):
             wbconf = {}
             wbconf["batch_size"] = 64
             wbconf["lr"] = 0.0001
-            wbconf["num_epochs"] = 5
+            wbconf["num_epochs"] = 2
             wbconf["no_cuda"] = False
             wbconf["log_interval"] = 10
             self.config = wbconf
@@ -136,12 +136,11 @@ class LogMetricsToWandb(EpochCallback):
         if (is_master
                 and (self.current_epoch_num - self.previous_logged_epoch)
                 >= self.epoch_end_log_freq):
-            log.info("Writing metrics for the epoch to wandb")
-            log.debug(f"Metrics are: {metrics!r}")
+            # print("Writing metrics for the epoch to wandb.")
+            print(f"Epoch metrics are: {metrics!r}")
             self.wandb.log(
                 {
                     **metrics,
-                },
-                step=self.current_epoch_num,
+                }
             )
             self.previous_logged_epoch = self.current_epoch_num

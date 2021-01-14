@@ -16,7 +16,7 @@ def get_predictions(model, dataset_reader, data):
     if size > bound:
         times = int(size/bound)
         print(f"Set is too big; total size: {size}. "
-                f"Batching {times} times".)
+                f"Batching {times} times.")
 
         for i in range(times):
             print(f"Lower: {bound*i}, Upper: {bound*(i + 1)}")
