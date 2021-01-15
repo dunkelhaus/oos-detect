@@ -40,7 +40,7 @@ def read_train_data(
     train_file_name = f"data_{set}_train.json"
     val_file_name = f"data_{set}_val.json"
     print(f"Reading training & validation data from "
-            f"{train_file_name} and {val_file_name}.")
+          f"{train_file_name} and {val_file_name}.")
 
     path = locate_oos_data()
     training_data = reader.read(path/train_file_name)
