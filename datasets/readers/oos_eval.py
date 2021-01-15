@@ -1,11 +1,10 @@
-import os
 import json
 import logging
 import numpy as np
 from allennlp.data import Instance
+from allennlp.data import DatasetReader
 from utilities.locate import locate_oos_data
 from allennlp.data.tokenizers import Tokenizer
-from allennlp.data import DatasetReader, Instance
 from allennlp.data.token_indexers import TokenIndexer
 from utilities.exceptions import ReqdFileNotInSetError
 from allennlp.data.fields import LabelField, TextField
