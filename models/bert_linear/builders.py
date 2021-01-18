@@ -1,4 +1,3 @@
-import torch
 import logging.config
 from typing import Any, Tuple
 from allennlp.models import Model
