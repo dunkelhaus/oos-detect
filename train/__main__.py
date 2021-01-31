@@ -28,10 +28,11 @@ from models.bert_linear.builders import bert_linear_builders
 # model code, above in the Setup section. We run the training loop to get
 # a trained model.
 
-def train_test_pred__bert_linear(
+def train_test_pred(
+        builders,
         run_test=False,
         set="full",
-        model_name="dunkrun"
+        model_name="dunkrun",
 ):
     dataset_reader = OOSEvalReader()
     train_data, test_data = read_oos_data(
@@ -42,7 +43,7 @@ def train_test_pred__bert_linear(
     # pp = pprint.PrettyPrinter(indent=4)
     model = run_training(
         data=train_data,
-        model_builder=bert_linear_builders,
+        model_builder=builders,
         run_name=(model_name + "_" + set)
     )
 
@@ -58,10 +59,11 @@ def train_test_pred__bert_linear(
     return actuals, predictions, labels
 
 
-actuals, predictions, labels = train_test_pred__bert_linear(
+actuals, predictions, labels = train_test_pred(
     run_test=True,
     set="small",
-    model_name="bert_linear"
+    model_name="bert_linear",
+    builders=bert_linear_builders
 )
 df = get_metrics(actuals, predictions, labels)
 
