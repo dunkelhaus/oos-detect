@@ -20,16 +20,16 @@ class BertLinearClassifier(Model):
             self,
             vocab: Vocabulary,
             embedder: TokenEmbedder,
-            encoder: Seq2VecEncoder,
+            seq2vec_encoder: Seq2VecEncoder,
             wbrun: Any
     ):
         super().__init__(vocab)
         self.embedder = embedder
-        self.encoder = encoder
+        self.seq2vec_encoder = seq2vec_encoder
         num_labels = vocab.get_vocab_size("labels")
         log.debug(f"Labels: {num_labels}.")
         self.classifier = torch.nn.Linear(
-            encoder.get_output_dim(),
+            seq2vec_encoder.get_output_dim(),
             num_labels
         )
         self.accuracy = CategoricalAccuracy()
@@ -38,19 +38,22 @@ class BertLinearClassifier(Model):
 
     def forward(
             self,
-            sentence: TextFieldTensors,
-            label: torch.Tensor = None
+            example: TextFieldTensors,
+            target: torch.Tensor = None
     ) -> Dict[str, torch.Tensor]:
         # Shape: (batch_size, num_tokens, embedding_dim)
         # log.debug(f"Forward pass starting. Sentence Dict: {sentence!r}")
 
-        mask = util.get_text_field_mask(sentence)
-        embedded_text = self.embedder(sentence)
+        mask = util.get_text_field_mask(example)
+        embedded_text = self.embedder(example)
         # Shape: (batch_size, num_tokens)
         # mask = sentence["tokens"]["mask"]
 
         # Shape: (batch_size, encoding_dim)
-        encoded_text = self.encoder(embedded_text, mask)
+        encoded_text = self.seq2vec_encoder(
+            embedded_text,
+            mask
+        )
         # Shape: (batch_size, num_labels)
         # log.debug(f"Running the classifier. "
         #         f"{mask}")
@@ -63,9 +66,9 @@ class BertLinearClassifier(Model):
 
         # log.debug(f"Forward pass complete. Probabilities: {probs!r}")
 
-        if label is not None:
-            self.accuracy(logits, label)
-            output['loss'] = torch.nn.functional.cross_entropy(logits, label)
+        if target is not None:
+            self.accuracy(logits, target)
+            output['loss'] = torch.nn.functional.cross_entropy(logits, target)
             """log.debug("Calling wandb.log")
             wandb.log({
                 "loss": output['loss'],
