@@ -1,0 +1,3 @@
+[submodule "oos_detect/models/pseudo-ood-generation"]
+	path = oos_detect/models/pseudo-ood-generation
+	url = https://github.com/dunkelhaus/pseudo-ood-generation.git
