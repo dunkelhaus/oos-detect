@@ -1,3 +1,6 @@
 [submodule "oos_detect/models/pseudo-ood-generation"]
 	path = oos_detect/models/pseudo-ood-generation
 	url = https://github.com/dunkelhaus/pseudo-ood-generation.git
+[submodule "oos_detect/datasets/oos_eval"]
+	path = oos_detect/datasets/oos_eval
+	url = https://github.com/dunkelhaus/oos-eval-allenfriendly.git
