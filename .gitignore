@@ -2,14 +2,15 @@
 __pycache__/
 */__pycache/*
 *.pyc
-.pytest_cache/
-*.egg-info/
+.pytest_cache
+/*.egg-info/
 
 # Logs.
 logs/
 
 # Training results.
-train/results/
+oos_detect/train/results/
+
 
 # WANDB
 wandb/

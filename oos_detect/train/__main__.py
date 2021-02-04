@@ -8,13 +8,13 @@
 
 # import wandb
 import pandas as pd
-from train.run import run_testing
-from train.run import run_training
-from train.metrics import get_metrics
-from train.predict import get_predictions
-from datasets.readers.oos_eval import OOSEvalReader
-from datasets.readers.oos_eval import read_oos_data
-from models.bert_linear.builders import bert_linear_builders
+from oos_detect.train.run import run_testing
+from oos_detect.train.run import run_training
+from oos_detect.train.metrics import get_metrics
+from oos_detect.train.predict import get_predictions
+from oos_detect.datasets.readers.oos_eval import OOSEvalReader
+from oos_detect.datasets.readers.oos_eval import read_oos_data
+from pseudo_ood_generation.components.ae.builders import pog_ae_builders
 
 
 # Logger setup.
@@ -31,6 +31,7 @@ from models.bert_linear.builders import bert_linear_builders
 def train_test_pred(
         builders,
         run_test=False,
+        get_preds=False,
         set="full",
         model_name="dunkrun",
 ):
@@ -50,23 +51,25 @@ def train_test_pred(
     if run_test:
         model = run_testing(test_data, model)
 
-    actuals, predictions, labels = get_predictions(
-        model,
-        dataset_reader,
-        list(test_data)
-    )
+    if get_preds:
+        actuals, predictions, labels = get_predictions(
+            model,
+            dataset_reader,
+            list(test_data)
+        )
 
-    return actuals, predictions, labels
+        return actuals, predictions, labels
+
+    return
 
 
-actuals, predictions, labels = train_test_pred(
-    run_test=True,
+train_test_pred(
     set="small",
-    model_name="bert_linear",
-    builders=bert_linear_builders
+    model_name="pog_autoencoder",
+    builders=pog_ae_builders
 )
-df = get_metrics(actuals, predictions, labels)
+# df = get_metrics(actuals, predictions, labels)
 
-with pd.option_context('display.max_rows', None):
-    print("\n\n=====   Multiclass Classification Report   =====")
-    print(df)
+# with pd.option_context('display.max_rows', None):
+#    print("\n\n=====   Multiclass Classification Report   =====")
+#    print(df)

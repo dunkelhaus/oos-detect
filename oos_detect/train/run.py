@@ -4,11 +4,11 @@ from typing import Tuple
 from typing import Iterable
 from allennlp.models import Model
 from allennlp.data import Instance
-from models.builders import build_vocab
+from oos_detect.models.builders import build_vocab
 from allennlp.training.util import evaluate
-from models.builders import build_data_loader
-from utilities.locate import locate_results_dir
-from models.builders import build_train_data_loaders
+from oos_detect.models.builders import build_data_loader
+from oos_detect.utilities.locate import locate_results_dir
+from oos_detect.models.builders import build_train_data_loaders
 
 # Logger setup.
 # from configs.log.log_conf import LOGGING_CONFIG
@@ -28,8 +28,8 @@ def run_training(
     print("Running over training set.")
     # wandb.tensorboard.patch(save=True, tensorboardX=False)
     batch_size = 64
-    lr = 0.0001
-    num_epochs = 2
+    lr = 0.001
+    num_epochs = 80
     train_data, dev_data = data
 
     # wbconf = wandb.config

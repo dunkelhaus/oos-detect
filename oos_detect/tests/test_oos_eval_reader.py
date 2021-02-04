@@ -10,7 +10,7 @@ from pathlib import Path
 
 @pytest.fixture
 def dataset_reader():
-    from datasets.readers.oos_eval import OOSEvalReader
+    from oos_detect.datasets.readers.oos_eval import OOSEvalReader
 
     return OOSEvalReader()
 

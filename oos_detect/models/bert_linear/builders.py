@@ -4,10 +4,10 @@ from allennlp.models import Model
 from allennlp.data import DataLoader
 from allennlp.data import Vocabulary
 from allennlp.training.trainer import Trainer
-from models.builders import build_epoch_callbacks
-from models.builders import build_batch_callbacks
+from oos_detect.models.builders import build_epoch_callbacks
+from oos_detect.models.builders import build_batch_callbacks
 from allennlp.training.trainer import GradientDescentTrainer
-from models.bert_linear.classifier import BertLinearClassifier
+from oos_detect.models.bert_linear.classifier import BertLinearClassifier
 from allennlp.training.optimizers import HuggingfaceAdamWOptimizer
 from allennlp.modules.text_field_embedders import TextFieldEmbedder
 from allennlp.modules.seq2vec_encoders.bert_pooler import BertPooler
