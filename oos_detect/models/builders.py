@@ -7,8 +7,8 @@ from allennlp.data import PyTorchDataLoader
 from allennlp.data import DatasetReader, Instance
 from allennlp.training.trainer import EpochCallback
 from allennlp.training.trainer import BatchCallback
-from utilities.wandb_loggers import LogMetricsToWandb
-from utilities.wandb_loggers import LogBatchMetricsToWandb
+from oos_detect.utilities.wandb_loggers import LogMetricsToWandb
+from oos_detect.utilities.wandb_loggers import LogBatchMetricsToWandb
 
 
 def build_epoch_callbacks(wbrun) -> EpochCallback:

@@ -1,16 +1,15 @@
-import os
 import json
 import logging
 import numpy as np
 from allennlp.data import Instance
-from utilities.locate import locate_oos_data
+from allennlp.data import DatasetReader
 from allennlp.data.tokenizers import Tokenizer
-from allennlp.data import DatasetReader, Instance
 from allennlp.data.token_indexers import TokenIndexer
-from utilities.exceptions import ReqdFileNotInSetError
 from allennlp.data.fields import LabelField, TextField
+from oos_detect.utilities.locate import locate_oos_data
 from typing import Dict, List, Iterator, Tuple, Iterable
-from utilities.exceptions import DataSetPortionMissingError
+from oos_detect.utilities.exceptions import ReqdFileNotInSetError
+from oos_detect.utilities.exceptions import DataSetPortionMissingError
 from allennlp.data.tokenizers import PretrainedTransformerTokenizer
 from allennlp.data.token_indexers import PretrainedTransformerIndexer
 
@@ -40,7 +39,7 @@ def read_train_data(
     train_file_name = f"data_{set}_train.json"
     val_file_name = f"data_{set}_val.json"
     print(f"Reading training & validation data from "
-            f"{train_file_name} and {val_file_name}.")
+          f"{train_file_name} and {val_file_name}.")
 
     path = locate_oos_data()
     training_data = reader.read(path/train_file_name)

@@ -1,7 +1,6 @@
 import torch
 import numpy as np
 from pandas import pd
-from prefect import task
 from typing import List, Tuple
 from transformers import BertTokenizer, BertModel
 
@@ -9,7 +8,6 @@ from transformers import BertTokenizer, BertModel
 # logging.basicConfig(level=logging.INFO)
 
 
-@task
 def get_hidden_states(
         model: BertModel,
         sent_data: np.array
@@ -54,7 +52,6 @@ def get_hidden_states(
     return hidden_states
 
 
-@task
 def load_bert() -> BertModel:
     """
     Load the BertModel object, on the GPU (add flag later if needed).
@@ -73,7 +70,6 @@ def load_bert() -> BertModel:
     return model
 
 
-@task
 def tokenize_bert(sents: pd.DataFrame) -> List:
     """
     Given a pd.Series containing strings of sentences, returns the
@@ -100,7 +96,6 @@ def tokenize_bert(sents: pd.DataFrame) -> List:
     return sent_data
 
 
-@task
 def _tokenize_bert_sentence(
         text: str,
         tokenizer: BertTokenizer
