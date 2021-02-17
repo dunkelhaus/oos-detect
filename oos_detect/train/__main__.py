@@ -65,7 +65,7 @@ def train_test_pred(
 
 train_test_pred(
     set="small",
-    model_name="pog_autoencoder",
+    model_name="pog_ae",
     builders=pog_ae_builders
 )
 # df = get_metrics(actuals, predictions, labels)

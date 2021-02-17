@@ -41,8 +41,10 @@ def build_vocab(
     :return Vocabulary: The Vocabulary object.
     """
     # log.debug("Building the vocabulary.")
+    print(f"Adding {len(instances)} instances data to vocab.")
+    vocab = Vocabulary.from_instances(instances)
 
-    return Vocabulary.from_instances(instances)
+    return vocab
 
 
 def build_data_loader(

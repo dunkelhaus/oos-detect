@@ -14,12 +14,13 @@ def locate_oos_data() -> Path:
     """
     log.debug("Locating CLINC data directory.")
     path = (Path(__file__).parent.parent
-            .absolute()/"datasets/oos-eval/data")
+            .absolute()/"datasets/oos_eval/data")
+    print(path)
 
     if path.is_dir():
         return path
     else:
-        log.debug("Failed! Path not resolved, or is not a file.")
+        print("Failed! Path not resolved, or is not a file.")
 
     return
 
@@ -41,7 +42,8 @@ def locate_results_dir() -> Path:
     if path.exists():
         return path
     else:
-        log.debug("Failed! Please create the directory "
-                  "oos-detect/train/results.")
+        # add code to mkdir a results dir.
+        print("Failed! Please create the directory "
+              "oos-detect/train/results.")
 
     return

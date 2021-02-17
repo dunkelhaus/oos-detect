@@ -41,6 +41,7 @@ def run_training(
     print(f"Example training instance: {train_data[0]}.")
 
     vocab = build_vocab(train_data + dev_data)
+    print(f"Vocab size: {vocab.get_index_to_token_vocabulary()}")
 
     # This is the allennlp-specific functionality in the Dataset object;
     # we need to be able convert strings in the data to integers, and
