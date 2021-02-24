@@ -4,11 +4,13 @@ from typing import Tuple
 from typing import Iterable
 from allennlp.models import Model
 from allennlp.data import Instance
-from oos_detect.models.builders import build_vocab
 from allennlp.training.util import evaluate
+from oos_detect.models.builders import build_vocab
 from oos_detect.models.builders import build_data_loader
 from oos_detect.utilities.locate import locate_results_dir
 from oos_detect.models.builders import build_train_data_loaders
+from allennlp.data.token_indexers import PretrainedTransformerIndexer
+from oos_detect.models.builders import build_vocab_and_apply_transformer_vocab
 
 # Logger setup.
 # from configs.log.log_conf import LOGGING_CONFIG
@@ -18,7 +20,8 @@ log = logging.getLogger(__name__)
 def run_training(
         data: Tuple[Iterable[Instance], Iterable[Instance]],
         model_builder,
-        run_name: str
+        run_name: str,
+        transformer_indexer: PretrainedTransformerIndexer = None
 ) -> Model:
     wbrun = wandb.init(
         project="oos-detect",
@@ -28,8 +31,8 @@ def run_training(
     print("Running over training set.")
     # wandb.tensorboard.patch(save=True, tensorboardX=False)
     batch_size = 64
-    lr = 0.001
-    num_epochs = 80
+    lr = 0.0001
+    num_epochs = 3
     train_data, dev_data = data
 
     # wbconf = wandb.config
@@ -40,8 +43,16 @@ def run_training(
 
     print(f"Example training instance: {train_data[0]}.")
 
-    vocab = build_vocab(train_data + dev_data)
-    print(f"Vocab size: {vocab.get_index_to_token_vocabulary()}")
+    if transformer_indexer:
+        vocab = build_vocab_and_apply_transformer_vocab(
+            train_data + dev_data,
+            indexer=transformer_indexer
+        )
+    else:
+        vocab = build_vocab(train_data + dev_data)
+
+    print(f"\nVocab size (num tokens): "
+          f"{vocab.get_vocab_size('tokens')}")
 
     # This is the allennlp-specific functionality in the Dataset object;
     # we need to be able convert strings in the data to integers, and
