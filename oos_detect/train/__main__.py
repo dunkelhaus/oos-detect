@@ -14,7 +14,8 @@ from oos_detect.train.metrics import get_metrics
 from oos_detect.train.predict import get_predictions
 from oos_detect.datasets.readers.oos_eval import OOSEvalReader
 from oos_detect.datasets.readers.oos_eval import read_oos_data
-from pseudo_ood_generation.components.ae.builders import pog_ae_builders
+from oos_detect.models.bert_linear.builders import bert_linear_builders
+# from pseudo_ood_generation.components.ae.builders import pog_ae_builders
 
 
 # Logger setup.
@@ -45,7 +46,8 @@ def train_test_pred(
     model = run_training(
         data=train_data,
         model_builder=builders,
-        run_name=(model_name + "_" + set)
+        run_name=(model_name + "_" + set),
+        transformer_indexer=dataset_reader.token_indexers["tokens"]
     )
 
     if run_test:
@@ -65,9 +67,16 @@ def train_test_pred(
 
 train_test_pred(
     set="small",
+    model_name="bert_linear",
+    builders=bert_linear_builders
+)
+
+
+"""train_test_pred(
+    set="small",
     model_name="pog_ae",
     builders=pog_ae_builders
-)
+)"""
 # df = get_metrics(actuals, predictions, labels)
 
 # with pd.option_context('display.max_rows', None):
