@@ -9,6 +9,7 @@ from allennlp.training.trainer import EpochCallback
 from allennlp.training.trainer import BatchCallback
 from oos_detect.utilities.wandb_loggers import LogMetricsToWandb
 from oos_detect.utilities.wandb_loggers import LogBatchMetricsToWandb
+from allennlp.data.token_indexers import PretrainedTransformerIndexer
 
 
 def build_epoch_callbacks(wbrun) -> EpochCallback:
@@ -43,6 +44,26 @@ def build_vocab(
     # log.debug("Building the vocabulary.")
     print(f"Adding {len(instances)} instances data to vocab.")
     vocab = Vocabulary.from_instances(instances)
+
+    return vocab
+
+
+# HACK: Temporary inelegant solution; until release brings fix
+# (PR: #4958).
+def build_vocab_and_apply_transformer_vocab(
+        instances: Iterable[Instance],
+        indexer: PretrainedTransformerIndexer
+) -> Vocabulary:
+    """
+    Build the Vocabulary object from the instances.
+    Also calls indexer._add_encoding_to_vocabulary_if_needed() on
+    the vocab.
+
+    :param instances: Iterable of allennlp instances.
+    :return Vocabulary: The Vocabulary object.
+    """
+    vocab = build_vocab(instances)
+    indexer._add_encoding_to_vocabulary_if_needed(vocab)
 
     return vocab
 
