@@ -100,7 +100,10 @@ class OOSEvalReader(DatasetReader):
         fields = {"sentence": sentence_field}
 
         # lab = LabelField(label)
-        fields["label"] = LabelField(label)
+        fields["label"] = LabelField(
+            label,
+            label_namespace="labels"
+        )
         # print(f"Just read: {lab.label}, {type(lab.label)}")
 
         return Instance(fields)
