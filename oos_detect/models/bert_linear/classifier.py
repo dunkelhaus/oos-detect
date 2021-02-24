@@ -38,14 +38,14 @@ class BertLinearClassifier(Model):
 
     def forward(
             self,
-            example: TextFieldTensors,
-            target: torch.Tensor = None
+            tokens: TextFieldTensors,
+            label: torch.Tensor = None
     ) -> Dict[str, torch.Tensor]:
         # Shape: (batch_size, num_tokens, embedding_dim)
         # log.debug(f"Forward pass starting. Sentence Dict: {sentence!r}")
 
-        mask = util.get_text_field_mask(example)
-        embedded_text = self.embedder(example)
+        mask = util.get_text_field_mask(tokens)
+        embedded_text = self.embedder(tokens)
         # Shape: (batch_size, num_tokens)
         # mask = sentence["tokens"]["mask"]
 
@@ -66,9 +66,9 @@ class BertLinearClassifier(Model):
 
         # log.debug(f"Forward pass complete. Probabilities: {probs!r}")
 
-        if target is not None:
-            self.accuracy(logits, target)
-            output['loss'] = torch.nn.functional.cross_entropy(logits, target)
+        if label is not None:
+            self.accuracy(logits, label)
+            output['loss'] = torch.nn.functional.cross_entropy(logits, label)
             """log.debug("Calling wandb.log")
             wandb.log({
                 "loss": output['loss'],
