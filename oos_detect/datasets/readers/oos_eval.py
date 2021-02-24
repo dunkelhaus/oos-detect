@@ -1,6 +1,7 @@
 import json
 import logging
 import numpy as np
+from pathlib import Path
 from allennlp.data import Instance
 from allennlp.data import DatasetReader
 from allennlp.data.tokenizers import Tokenizer
@@ -82,7 +83,8 @@ class OOSEvalReader(DatasetReader):
         self.token_indexers = token_indexers or {
             "tokens": PretrainedTransformerIndexer(
                 model_name="bert-base-uncased",
-                max_length=max_length
+                max_length=max_length,
+                namespace="tokens"
             )
         }
         self.tokenizer = tokenizer or PretrainedTransformerTokenizer(
@@ -97,7 +99,7 @@ class OOSEvalReader(DatasetReader):
     ) -> Instance:
         tokens = self.tokenizer.tokenize(sentence)
         sentence_field = TextField(tokens, self.token_indexers)
-        fields = {"sentence": sentence_field}
+        fields = {"tokens": sentence_field}
 
         # lab = LabelField(label)
         fields["label"] = LabelField(
@@ -124,8 +126,8 @@ class OOSEvalReader(DatasetReader):
         # fpath = self.path/(set_type + ".json")
 
         try:
-            # file_path.resolve(strict=True)
-            log.debug(file_path)
+            print(f"Looking for data in path: {file_path}")
+            Path(file_path).resolve(strict=True)
             # assert os.path.isfile(file_path)
 
         except FileNotFoundError as fe:
