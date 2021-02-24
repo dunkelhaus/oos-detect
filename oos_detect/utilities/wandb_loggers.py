@@ -35,7 +35,7 @@ class LogBatchMetricsToWandb(BatchCallback):
             wbconf = {}
             wbconf["batch_size"] = 64
             wbconf["lr"] = 0.0001
-            wbconf["num_epochs"] = 2
+            wbconf["num_epochs"] = 3
             wbconf["no_cuda"] = False
             wbconf["log_interval"] = 10
             self.config = wbconf
@@ -111,7 +111,7 @@ class LogMetricsToWandb(EpochCallback):
             wbconf = {}
             wbconf["batch_size"] = 64
             wbconf["lr"] = 0.0001
-            wbconf["num_epochs"] = 2
+            wbconf["num_epochs"] = 3
             wbconf["no_cuda"] = False
             wbconf["log_interval"] = 10
             self.config = wbconf
