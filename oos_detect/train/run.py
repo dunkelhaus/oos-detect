@@ -1,5 +1,7 @@
 import wandb
 import logging
+from typing import Any
+from typing import Dict
 from typing import Tuple
 from typing import Iterable
 from allennlp.models import Model
@@ -9,8 +11,6 @@ from oos_detect.models.builders import build_vocab
 from oos_detect.models.builders import build_data_loader
 from oos_detect.utilities.locate import locate_results_dir
 from oos_detect.models.builders import build_train_data_loaders
-from allennlp.data.token_indexers import PretrainedTransformerIndexer
-from oos_detect.models.builders import build_vocab_and_apply_transformer_vocab
 
 # Logger setup.
 # from configs.log.log_conf import LOGGING_CONFIG
@@ -21,18 +21,16 @@ def run_training(
         data: Tuple[Iterable[Instance], Iterable[Instance]],
         model_builder,
         run_name: str,
-        transformer_indexer: PretrainedTransformerIndexer = None
+        hyperparams: Dict[str, Any]
 ) -> Model:
     wbrun = wandb.init(
         project="oos-detect",
         sync_tensorboard=False,
-        name=run_name
+        name=run_name,
+        config=hyperparams
     )
     print("Running over training set.")
     # wandb.tensorboard.patch(save=True, tensorboardX=False)
-    batch_size = 64
-    lr = 0.0001
-    num_epochs = 3
     train_data, dev_data = data
 
     # wbconf = wandb.config
@@ -43,13 +41,10 @@ def run_training(
 
     print(f"Example training instance: {train_data[0]}.")
 
-    if transformer_indexer:
-        vocab = build_vocab_and_apply_transformer_vocab(
-            train_data + dev_data,
-            indexer=transformer_indexer
-        )
-    else:
-        vocab = build_vocab(train_data + dev_data)
+    vocab = build_vocab(
+        train_data + dev_data,
+        from_transformer=True
+    )
 
     print(f"\nVocab size (num tokens): "
           f"{vocab.get_vocab_size('tokens')}")
@@ -66,7 +61,7 @@ def run_training(
     train_loader, dev_loader = build_train_data_loaders(
         train_data,
         dev_data,
-        batch_size
+        hyperparams["batch_size"]
     )
 
     # Locate serialization directory.
@@ -80,8 +75,8 @@ def run_training(
         serialization_dir,
         train_loader,
         dev_loader,
-        lr,
-        num_epochs,
+        hyperparams["lr"],
+        hyperparams["num_epochs"],
         vocab,
         wbrun
     )
