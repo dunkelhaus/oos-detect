@@ -79,7 +79,10 @@ class OOSEvalReader(DatasetReader):
 
         :param token_indexers: Dict containing token indexer, string.
         """
-        super().__init__(lazy=False)
+        super().__init__(
+            manual_distributed_sharding=True,
+            manual_multiprocess_sharding=True
+        )
         self.token_indexers = token_indexers or {
             "tokens": PretrainedTransformerIndexer(
                 model_name="bert-base-uncased",
@@ -98,7 +101,7 @@ class OOSEvalReader(DatasetReader):
             label: List[str] = None
     ) -> Instance:
         tokens = self.tokenizer.tokenize(sentence)
-        sentence_field = TextField(tokens, self.token_indexers)
+        sentence_field = TextField(tokens)
         fields = {"tokens": sentence_field}
 
         # lab = LabelField(label)
@@ -109,6 +112,12 @@ class OOSEvalReader(DatasetReader):
         # print(f"Just read: {lab.label}, {type(lab.label)}")
 
         return Instance(fields)
+
+    def apply_token_indexers(
+            self,
+            instance: Instance
+    ) -> None:
+        instance.fields["tokens"].token_indexers = self.token_indexers
 
     def _read(
             self,
@@ -140,7 +149,7 @@ class OOSEvalReader(DatasetReader):
                 data_f = json.load(f)["data"]
                 # data = self._clinc_json_to_np(data_f)
 
-                for line in data_f:
+                for line in self.shard_iterable(data_f):
                     sentence, label = line[0], line[1]
                     yield self.text_to_instance(sentence, label)
 
