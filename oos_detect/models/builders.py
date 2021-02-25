@@ -5,10 +5,10 @@ from allennlp.data import Vocabulary
 from allennlp.data import DataLoader
 from typing import Any, Tuple, Iterable
 from allennlp.training.trainer import Trainer
-from allennlp.data import MultiProcessDataLoader
 from allennlp.training.trainer import TrainerCallback
 from oos_detect.train.callbacks import LogMetricsToWandb
 from allennlp.training.trainer import GradientDescentTrainer
+from allennlp.data.data_loaders import MultiProcessDataLoader
 from allennlp.training.optimizers import HuggingfaceAdamWOptimizer
 
 
