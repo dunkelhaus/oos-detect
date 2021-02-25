@@ -36,6 +36,13 @@ def train_test_pred(
         set="full",
         model_name="dunkrun",
 ):
+    hyperparams = {
+        "epochs": 3,
+        "batch_size": 64,
+        "lr": 0.0001,
+        "no_cuda": False,
+        "log_interval": 10
+    }
     dataset_reader = OOSEvalReader()
     train_data, test_data = read_oos_data(
         reader=dataset_reader,
@@ -47,7 +54,7 @@ def train_test_pred(
         data=train_data,
         model_builder=builders,
         run_name=(model_name + "_" + set),
-        transformer_indexer=dataset_reader.token_indexers["tokens"]
+        hyperparams=hyperparams
     )
 
     if run_test:
