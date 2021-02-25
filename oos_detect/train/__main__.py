@@ -56,14 +56,17 @@ def train_test_pred(
     )
 
     if run_test:
-        model = run_testing(test_path, model)
+        model = run_testing(
+            data_reader=data_reader,
+            data_path=test_path,
+            model=model
+        )
 
-    # TODO: check test path param.
     if get_preds:
         actuals, predictions, labels = get_predictions(
-            model,
-            data_reader,
-            list(test_path)
+            data_reader=data_reader,
+            data_path=test_path,
+            model=model
         )
 
         return actuals, predictions, labels
@@ -71,10 +74,12 @@ def train_test_pred(
     return
 
 
-train_test_pred(
+actuals, predictions, labels = train_test_pred(
     set="small",
     model_name="bert_linear",
-    builders=bert_linear_builders
+    builders=bert_linear_builders,
+    run_test=True,
+    get_preds=True
 )
 
 
@@ -83,8 +88,8 @@ train_test_pred(
     model_name="pog_ae",
     builders=pog_ae_builders
 )"""
-# df = get_metrics(actuals, predictions, labels)
+df = get_metrics(actuals, predictions, labels)
 
-# with pd.option_context('display.max_rows', None):
-#    print("\n\n=====   Multiclass Classification Report   =====")
-#    print(df)
+with pd.option_context('display.max_rows', None):
+    print("\n\n=====   Multiclass Classification Report   =====")
+    print(df)
