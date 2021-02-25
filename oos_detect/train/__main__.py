@@ -13,8 +13,9 @@ from oos_detect.train.run import run_training
 from oos_detect.train.metrics import get_metrics
 from oos_detect.train.predict import get_predictions
 from oos_detect.datasets.readers.oos_eval import OOSEvalReader
-from oos_detect.datasets.readers.oos_eval import read_oos_data
-from pseudo_ood_generation.components.ae.builders import pog_ae_builders
+from oos_detect.datasets.readers.oos_eval import oos_data_paths
+from oos_detect.models.bert_linear.builders import bert_linear_builders
+# from pseudo_ood_generation.components.ae.builders import pog_ae_builders
 
 
 # Logger setup.
@@ -35,27 +36,37 @@ def train_test_pred(
         set="full",
         model_name="dunkrun",
 ):
-    dataset_reader = OOSEvalReader()
-    train_data, test_data = read_oos_data(
-        reader=dataset_reader,
-        set=set
-    )
+    hyperparams = {
+        "num_epochs": 3,
+        "batch_size": 64,
+        "lr": 0.0001,
+        "no_cuda": False,
+        "log_interval": 10
+    }
+    data_reader = OOSEvalReader()
+    train_paths, test_path = oos_data_paths(set=set)
 
     # pp = pprint.PrettyPrinter(indent=4)
     model = run_training(
-        data=train_data,
+        data_reader=data_reader,
+        data_paths=train_paths,
         model_builder=builders,
-        run_name=(model_name + "_" + set)
+        run_name=(model_name + "_" + set),
+        hyperparams=hyperparams
     )
 
     if run_test:
-        model = run_testing(test_data, model)
+        model = run_testing(
+            data_reader=data_reader,
+            data_path=test_path,
+            model=model
+        )
 
     if get_preds:
         actuals, predictions, labels = get_predictions(
-            model,
-            dataset_reader,
-            list(test_data)
+            data_reader=data_reader,
+            data_path=test_path,
+            model=model
         )
 
         return actuals, predictions, labels
@@ -63,13 +74,22 @@ def train_test_pred(
     return
 
 
-train_test_pred(
+actuals, predictions, labels = train_test_pred(
     set="small",
-    model_name="pog_autoencoder",
-    builders=pog_ae_builders
+    model_name="bert_linear",
+    builders=bert_linear_builders,
+    run_test=True,
+    get_preds=True
 )
-# df = get_metrics(actuals, predictions, labels)
 
-# with pd.option_context('display.max_rows', None):
-#    print("\n\n=====   Multiclass Classification Report   =====")
-#    print(df)
+
+"""train_test_pred(
+    set="small",
+    model_name="pog_ae",
+    builders=pog_ae_builders
+)"""
+df = get_metrics(actuals, predictions, labels)
+
+with pd.option_context('display.max_rows', None):
+    print("\n\n=====   Multiclass Classification Report   =====")
+    print(df)

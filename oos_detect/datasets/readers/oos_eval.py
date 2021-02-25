@@ -1,13 +1,14 @@
 import json
 import logging
 import numpy as np
+from pathlib import Path
 from allennlp.data import Instance
 from allennlp.data import DatasetReader
 from allennlp.data.tokenizers import Tokenizer
+from typing import Dict, List, Iterator, Tuple
 from allennlp.data.token_indexers import TokenIndexer
 from allennlp.data.fields import LabelField, TextField
 from oos_detect.utilities.locate import locate_oos_data
-from typing import Dict, List, Iterator, Tuple, Iterable
 from oos_detect.utilities.exceptions import ReqdFileNotInSetError
 from oos_detect.utilities.exceptions import DataSetPortionMissingError
 from allennlp.data.tokenizers import PretrainedTransformerTokenizer
@@ -17,48 +18,24 @@ from allennlp.data.token_indexers import PretrainedTransformerIndexer
 log = logging.getLogger(__name__)
 
 
-def read_oos_data(
-        reader: DatasetReader,
+def oos_data_paths(
         set: str
-) -> Tuple[Tuple[Iterable[Instance], Iterable[Instance]], Iterable[Instance]]:
+) -> Tuple[Tuple[Path, Path], Path]:
     if set not in {"oos_plus", "imbalanced", "full", "small"}:
         print("Incorrect dataset mentioned, ending.")
         return
 
-    print(f"Reading the oos_{set} dataset.")
-    train_data = read_train_data(reader, set)
-    test_data = read_test_data(reader, set)
-
-    return train_data, test_data
-
-
-def read_train_data(
-        reader: DatasetReader,
-        set: str
-) -> Tuple[Iterable[Instance], Iterable[Instance]]:
+    print(f"Retrieving paths for oos_{set} dataset.")
     train_file_name = f"data_{set}_train.json"
     val_file_name = f"data_{set}_val.json"
-    print(f"Reading training & validation data from "
-          f"{train_file_name} and {val_file_name}.")
-
-    path = locate_oos_data()
-    training_data = reader.read(path/train_file_name)
-    validation_data = reader.read(path/val_file_name)
-
-    return training_data, validation_data
-
-
-def read_test_data(
-        reader: DatasetReader,
-        set: str
-) -> Tuple[Iterable[Instance], Iterable[Instance]]:
     test_file_name = f"data_{set}_test.json"
-    print(f"Reading test data from {test_file_name}.")
 
     path = locate_oos_data()
-    test_data = reader.read(path/test_file_name)
+    train_path = path/train_file_name
+    val_path = path/val_file_name
+    test_path = path/test_file_name
 
-    return test_data
+    return (train_path, val_path), test_path
 
 
 # @DatasetReader.register('oos-eval-reader')
@@ -78,11 +55,15 @@ class OOSEvalReader(DatasetReader):
 
         :param token_indexers: Dict containing token indexer, string.
         """
-        super().__init__(lazy=False)
+        super().__init__(
+            manual_distributed_sharding=True,
+            manual_multiprocess_sharding=True
+        )
         self.token_indexers = token_indexers or {
             "tokens": PretrainedTransformerIndexer(
                 model_name="bert-base-uncased",
-                max_length=max_length
+                max_length=max_length,
+                namespace="tokens"
             )
         }
         self.tokenizer = tokenizer or PretrainedTransformerTokenizer(
@@ -96,14 +77,23 @@ class OOSEvalReader(DatasetReader):
             label: List[str] = None
     ) -> Instance:
         tokens = self.tokenizer.tokenize(sentence)
-        sentence_field = TextField(tokens, self.token_indexers)
-        fields = {"sentence": sentence_field}
+        sentence_field = TextField(tokens)
+        fields = {"tokens": sentence_field}
 
         # lab = LabelField(label)
-        fields["label"] = LabelField(label)
+        fields["label"] = LabelField(
+            label,
+            label_namespace="labels"
+        )
         # print(f"Just read: {lab.label}, {type(lab.label)}")
 
         return Instance(fields)
+
+    def apply_token_indexers(
+            self,
+            instance: Instance
+    ) -> None:
+        instance.fields["tokens"].token_indexers = self.token_indexers
 
     def _read(
             self,
@@ -121,8 +111,8 @@ class OOSEvalReader(DatasetReader):
         # fpath = self.path/(set_type + ".json")
 
         try:
-            # file_path.resolve(strict=True)
-            log.debug(file_path)
+            print(f"Looking for data in path: {file_path}")
+            Path(file_path).resolve(strict=True)
             # assert os.path.isfile(file_path)
 
         except FileNotFoundError as fe:
@@ -135,7 +125,7 @@ class OOSEvalReader(DatasetReader):
                 data_f = json.load(f)["data"]
                 # data = self._clinc_json_to_np(data_f)
 
-                for line in data_f:
+                for line in self.shard_iterable(data_f):
                     sentence, label = line[0], line[1]
                     yield self.text_to_instance(sentence, label)
 
