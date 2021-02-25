@@ -3,9 +3,10 @@ import logging
 from typing import Any
 from typing import Dict
 from typing import Tuple
-from typing import Iterable
+from pathlib import Path
+from typing import Callable
 from allennlp.models import Model
-from allennlp.data import Instance
+from allennlp.data import DatasetReader
 from allennlp.training.util import evaluate
 from oos_detect.models.builders import build_vocab
 from oos_detect.models.builders import build_data_loader
@@ -18,8 +19,9 @@ log = logging.getLogger(__name__)
 
 
 def run_training(
-        data: Tuple[Iterable[Instance], Iterable[Instance]],
-        model_builder,
+        data_reader: DatasetReader,
+        data_paths: Tuple[Path, Path],
+        model_builder: Callable,
         run_name: str,
         hyperparams: Dict[str, Any]
 ) -> Model:
@@ -31,7 +33,7 @@ def run_training(
     )
     print("Running over training set.")
     # wandb.tensorboard.patch(save=True, tensorboardX=False)
-    train_data, dev_data = data
+    train_path, val_path = data_paths
 
     # wbconf = wandb.config
 
@@ -39,30 +41,32 @@ def run_training(
     # wbconf.log_interval = 10
     # log.debug(f"WandB config: {wandb.config!r}")
 
-    print(f"Example training instance: {train_data[0]}.")
-
-    vocab = build_vocab(
-        train_data + dev_data,
-        from_transformer=True
-    )
+    vocab = build_vocab(from_transformer=True)
 
     print(f"\nVocab size (num tokens): "
           f"{vocab.get_vocab_size('tokens')}")
+    print(f"Vocab check: {vocab}. Post init.")
 
-    # This is the allennlp-specific functionality in the Dataset object;
-    # we need to be able convert strings in the data to integers, and
-    # this is how we do it.
-    train_data.index_with(vocab)
-    dev_data.index_with(vocab)
-
-    # These are again a subclass of pytorch DataLoaders, with an
-    # allennlp-specific collate function, that runs our indexing and
-    # batching code.
-    train_loader, dev_loader = build_train_data_loaders(
-        train_data,
-        dev_data,
-        hyperparams["batch_size"]
+    train_loader, val_loader = build_train_data_loaders(
+        data_reader=data_reader,
+        train_path=train_path,
+        val_path=val_path,
+        batch_size=hyperparams["batch_size"]
     )
+
+    # This is the allennlp-specific functionality in the Dataset
+    # object; we need to be able convert strings in the data to
+    # integers, and this is how we do it.
+    # Note: changed for v2.1.0 of allennlp, since the
+    # AllennlpDataset has now been removed. Dataloaders have
+    # an index_with function instead.
+    vocab.extend_from_instances(train_loader.iter_instances())
+    vocab.extend_from_instances(val_loader.iter_instances())
+    print(f"Vocab check: {vocab}. Post extending.")
+
+    train_loader.index_with(vocab)
+    val_loader.index_with(vocab)
+    print(f"Vocab check: {vocab}. Post indexing.")
 
     # Locate serialization directory.
     serialization_dir = locate_results_dir()
@@ -74,7 +78,7 @@ def run_training(
     model, trainer = model_builder(
         serialization_dir,
         train_loader,
-        dev_loader,
+        val_loader,
         hyperparams["lr"],
         hyperparams["num_epochs"],
         vocab,
@@ -93,18 +97,22 @@ def run_training(
 
 
 def run_testing(
-        data: Iterable[Instance],
+        data_reader: DatasetReader,
+        data_path: Path,
         model: Model
 ) -> Model:
     print("Running over test set.")
 
-    data.index_with(model.vocab)
-    test_data_loader = build_data_loader(
-        data,
+    test_loader = build_data_loader(
+        data_reader=data_reader,
+        data_path=data_path,
         batch_size=8,
         shuffle=False
     )
-    results = evaluate(model, test_data_loader, cuda_device=0)
+    model.vocab.extend_from_instances(test_loader.iter_instances())
+    test_loader.index_with(model.vocab)
+
+    results = evaluate(model, test_loader, cuda_device=0)
     print(f"Test results: {results}.")
     # log.info(results)
 
