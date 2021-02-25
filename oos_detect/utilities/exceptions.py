@@ -20,3 +20,10 @@ class ReqdFileNotInSetError(Error):
     Raised when the file asked for does not exist in the dataset.
     """
     pass
+
+
+class UnskippableSituationError(Error):
+    """
+    Raised when control flow must intentionally be stopped.
+    """
+    pass
