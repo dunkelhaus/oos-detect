@@ -1,8 +1,9 @@
-import torch
+from pathlib import Path
 from allennlp.models import Model
 from allennlp.data import Instance
 from allennlp.data import Vocabulary
 from allennlp.data import DataLoader
+from allennlp.data import DatasetReader
 from typing import Any, Tuple, Iterable
 from allennlp.training.trainer import Trainer
 from allennlp.training.trainer import TrainerCallback
@@ -10,9 +11,13 @@ from oos_detect.train.callbacks import LogMetricsToWandb
 from allennlp.training.trainer import GradientDescentTrainer
 from allennlp.data.data_loaders import MultiProcessDataLoader
 from allennlp.training.optimizers import HuggingfaceAdamWOptimizer
+from oos_detect.utilities.exceptions import UnskippableSituationError
 
 
-def build_callbacks(wbrun) -> TrainerCallback:
+def build_callbacks(
+        serialization_dir: Path,
+        wbrun: Any
+) -> TrainerCallback:
     """
     Instantiate callback - factory method.
 
@@ -20,11 +25,14 @@ def build_callbacks(wbrun) -> TrainerCallback:
     :return LogMetricsToWandb: Instantiated LogMetricsToWandb object.
     """
 
-    return [LogMetricsToWandb(wbrun=wbrun)]
+    return [LogMetricsToWandb(
+        serialization_dir=serialization_dir,
+        wbrun=wbrun
+    )]
 
 
 def build_vocab(
-        instances: Iterable[Instance],
+        instances: Iterable[Instance] = None,
         from_transformer: bool = False
 ) -> Vocabulary:
     """
@@ -38,21 +46,26 @@ def build_vocab(
     :return Vocabulary: The Vocabulary object.
     """
     # log.debug("Building the vocabulary.")
-    print(f"Adding {len(instances)} instances data to vocab.")
 
     if from_transformer:
         vocab = Vocabulary.from_pretrained_transformer(
             model_name="bert-base-uncased"
         )
-        vocab.extend_from_instances(instances)
-    else:
+
+    elif instances:
         vocab = Vocabulary.from_instances(instances)
+
+    else:
+        print("No instances to create vocab with, and pretrained"
+              " transformer isn't being used.")
+        raise UnskippableSituationError()
 
     return vocab
 
 
 def build_data_loader(
-        data: torch.utils.data.Dataset,
+        data_reader: DatasetReader,
+        data_path: Path,
         batch_size: int,
         shuffle: bool = True
 ) -> DataLoader:
@@ -69,9 +82,10 @@ def build_data_loader(
     # what actually does indexing and batching.
     # log.debug("Building DataLoader.")
     loader = MultiProcessDataLoader(
-        data,
+        reader=data_reader,
+        data_path=data_path,
         batch_size=batch_size,
-        shuffle=True
+        shuffle=shuffle
     )
     # log.debug("DataLoader built.")
 
@@ -79,8 +93,9 @@ def build_data_loader(
 
 
 def build_train_data_loaders(
-        train_data: torch.utils.data.Dataset,
-        dev_data: torch.utils.data.Dataset,
+        data_reader: DatasetReader,
+        train_path: Path,
+        val_path: Path,
         batch_size: int
 ) -> Tuple[DataLoader, DataLoader]:
     """
@@ -93,18 +108,20 @@ def build_train_data_loaders(
     """
     # log.debug("Building Training DataLoaders.")
     train_loader = build_data_loader(
-        train_data,
+        data_reader=data_reader,
+        data_path=train_path,
         batch_size=batch_size,
         shuffle=True
     )
-    dev_loader = build_data_loader(
-        dev_data,
+    val_loader = build_data_loader(
+        data_reader=data_reader,
+        data_path=val_path,
         batch_size=batch_size,
         shuffle=False
     )
     # log.debug("Training DataLoaders built.")
 
-    return train_loader, dev_loader
+    return train_loader, val_loader
 
 
 def build_grad_desc_with_adam_trainer(
@@ -145,7 +162,11 @@ def build_grad_desc_with_adam_trainer(
         validation_data_loader=dev_loader,
         num_epochs=num_epochs,
         optimizer=optimizer,
-        callbacks=build_callbacks(wbrun) if wbrun else None
+        callbacks=(
+            build_callbacks(serialization_dir, wbrun)
+            if wbrun
+            else None
+        )
     )
 
     return trainer
