@@ -13,7 +13,7 @@ from oos_detect.train.run import run_training
 from oos_detect.train.metrics import get_metrics
 from oos_detect.train.predict import get_predictions
 from oos_detect.datasets.readers.oos_eval import OOSEvalReader
-from oos_detect.datasets.readers.oos_eval import read_oos_data
+from oos_detect.datasets.readers.oos_eval import oos_data_paths
 from oos_detect.models.bert_linear.builders import bert_linear_builders
 # from pseudo_ood_generation.components.ae.builders import pog_ae_builders
 
@@ -37,34 +37,33 @@ def train_test_pred(
         model_name="dunkrun",
 ):
     hyperparams = {
-        "epochs": 3,
+        "num_epochs": 3,
         "batch_size": 64,
         "lr": 0.0001,
         "no_cuda": False,
         "log_interval": 10
     }
-    dataset_reader = OOSEvalReader()
-    train_data, test_data = read_oos_data(
-        reader=dataset_reader,
-        set=set
-    )
+    data_reader = OOSEvalReader()
+    train_paths, test_path = oos_data_paths(set=set)
 
     # pp = pprint.PrettyPrinter(indent=4)
     model = run_training(
-        data=train_data,
+        data_reader=data_reader,
+        data_paths=train_paths,
         model_builder=builders,
         run_name=(model_name + "_" + set),
         hyperparams=hyperparams
     )
 
     if run_test:
-        model = run_testing(test_data, model)
+        model = run_testing(test_path, model)
 
+    # TODO: check test path param.
     if get_preds:
         actuals, predictions, labels = get_predictions(
             model,
-            dataset_reader,
-            list(test_data)
+            data_reader,
+            list(test_path)
         )
 
         return actuals, predictions, labels
