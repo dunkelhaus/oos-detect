@@ -1,5 +1,6 @@
 import torch
-from typing import Any, List, Dict
+from pathlib import Path
+from typing import Any, List, Dict, Optional
 from allennlp.training.trainer import Trainer
 from allennlp.training.trainer import TrainerCallback
 from allennlp.data.data_loaders.data_loader import TensorDict
@@ -9,12 +10,13 @@ from oos_detect.utilities.exceptions import UnskippableSituationError
 class LogMetricsToWandb(TrainerCallback):
     def __init__(
             self,
+            serialization_dir: Path,
             wbrun: Any,
             epoch_end_log_freq: int = 1
     ) -> None:
         # import wandb here to be sure that it was initialized
         # before this line was executed
-        super().__init__()
+        super().__init__(serialization_dir)
         # import wandb  # type: ignore
 
         self.wandb = wbrun
@@ -43,7 +45,8 @@ class LogMetricsToWandb(TrainerCallback):
         epoch: int,
         batch_number: int,
         is_training: bool,
-        is_primary: bool
+        is_primary: bool,
+        batch_grad_norm: Optional[float] = None,
     ) -> None:
         """
         This should run after all the epoch end metrics have
