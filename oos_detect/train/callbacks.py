@@ -2,8 +2,8 @@ import torch
 from typing import Any, List, Dict
 from allennlp.training.trainer import Trainer
 from allennlp.training.trainer import TrainerCallback
-from utilities.exceptions import UnskippableSituationError
 from allennlp.data.data_loaders.data_loader import TensorDict
+from oos_detect.utilities.exceptions import UnskippableSituationError
 
 
 class LogMetricsToWandb(TrainerCallback):
