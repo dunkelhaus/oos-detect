@@ -26,4 +26,8 @@ class UnskippableSituationError(Error):
     """
     Raised when control flow must intentionally be stopped.
     """
-    pass
+
+    def __init__(self, arg):
+        self.args = arg
+
+        print(f"Error was: {self.args}.")

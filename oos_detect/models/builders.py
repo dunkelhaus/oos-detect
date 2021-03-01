@@ -11,7 +11,7 @@ from oos_detect.train.callbacks import LogMetricsToWandb
 from allennlp.training.trainer import GradientDescentTrainer
 from allennlp.data.data_loaders import MultiProcessDataLoader
 from allennlp.training.optimizers import HuggingfaceAdamWOptimizer
-from oos_detect.utilities.exceptions import UnskippableSituationError
+from oos_detect.utilities.errors import UnskippableSituationError
 
 
 def build_callbacks(
@@ -56,9 +56,10 @@ def build_vocab(
         vocab = Vocabulary.from_instances(instances)
 
     else:
-        print("No instances to create vocab with, and pretrained"
-              " transformer isn't being used.")
-        raise UnskippableSituationError()
+        raise UnskippableSituationError(
+            "No instances to create vocab with, and pretrained"
+            " transformer isn't being used."
+        )
 
     return vocab
 

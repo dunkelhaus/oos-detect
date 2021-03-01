@@ -4,7 +4,7 @@ from typing import Any, List, Dict, Optional
 from allennlp.training.trainer import Trainer
 from allennlp.training.trainer import TrainerCallback
 from allennlp.data.data_loaders.data_loader import TensorDict
-from oos_detect.utilities.exceptions import UnskippableSituationError
+from oos_detect.utilities.errors import UnskippableSituationError
 
 
 class LogMetricsToWandb(TrainerCallback):
@@ -33,8 +33,9 @@ class LogMetricsToWandb(TrainerCallback):
 
     def update_config(self, trainer: Trainer) -> None:
         if self.config is None:
-            print("Config is none. How did this happen?")
-            raise UnskippableSituationError()
+            raise UnskippableSituationError(
+                "Config in callbacks is None."
+            )
 
     def on_batch(
         self,

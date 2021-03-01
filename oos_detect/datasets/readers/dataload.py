@@ -3,7 +3,7 @@ import json
 import pandas as pd
 from pathlib import Path
 from typing import List, Dict
-from oos_detect.utilities.exceptions import DataSetPortionMissingError
+from oos_detect.utilities.errors import DataSetPortionMissingError
 
 
 # TODO: Add support for 'all' flag.
