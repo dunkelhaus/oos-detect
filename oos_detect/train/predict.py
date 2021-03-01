@@ -1,5 +1,5 @@
 import numpy as np
-from oos_detect.utilities.locate import locate_oos_data
+from oos_detect.utilities.filesystem import locate_oos_data
 from allennlp.predictors import TextClassifierPredictor
 
 

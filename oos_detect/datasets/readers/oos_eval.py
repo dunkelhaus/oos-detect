@@ -8,9 +8,9 @@ from allennlp.data.tokenizers import Tokenizer
 from typing import Dict, List, Iterator, Tuple
 from allennlp.data.token_indexers import TokenIndexer
 from allennlp.data.fields import LabelField, TextField
-from oos_detect.utilities.locate import locate_oos_data
-from oos_detect.utilities.exceptions import ReqdFileNotInSetError
-from oos_detect.utilities.exceptions import DataSetPortionMissingError
+from oos_detect.utilities.filesystem import locate_oos_data
+from oos_detect.utilities.errors import ReqdFileNotInSetError
+from oos_detect.utilities.errors import DataSetPortionMissingError
 from allennlp.data.tokenizers import PretrainedTransformerTokenizer
 from allennlp.data.token_indexers import PretrainedTransformerIndexer
 

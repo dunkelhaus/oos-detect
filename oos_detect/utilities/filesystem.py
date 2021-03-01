@@ -1,5 +1,7 @@
+import os
 import logging
 from pathlib import Path
+from oos_detect.utilities.errors import UnskippableSituationError
 
 # Logger setup.
 log = logging.getLogger(__name__)
@@ -43,7 +45,27 @@ def locate_results_dir() -> Path:
         return path
     else:
         # add code to mkdir a results dir.
-        print("Failed! Please create the directory "
-              "oos-detect/train/results.")
+        UnskippableSituationError(
+            "Failed! Please create the directory "
+            "oos-detect/train/results."
+        )
+
+    return
+
+
+def empty_dir(dir_path: Path):
+    """
+    Clear provided directory path of files/folders.
+
+    :param dir_path: Path for directory to be emptied.
+    """
+    if not dir_path.is_dir():
+        raise UnskippableSituationError(
+            "Path for directory to be emptied is not a directory."
+        )
+
+    for root, dirs, files in os.walk(dir_path):
+        for file in files:
+            os.remove(os.path.join(root, file))
 
     return

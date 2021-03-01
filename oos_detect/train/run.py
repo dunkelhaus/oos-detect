@@ -9,8 +9,9 @@ from allennlp.models import Model
 from allennlp.data import DatasetReader
 from allennlp.training.util import evaluate
 from oos_detect.models.builders import build_vocab
+from oos_detect.utilities.filesystem import empty_dir
 from oos_detect.models.builders import build_data_loader
-from oos_detect.utilities.locate import locate_results_dir
+from oos_detect.utilities.filesystem import locate_results_dir
 from oos_detect.models.builders import build_train_data_loaders
 
 # Logger setup.
@@ -23,7 +24,8 @@ def run_training(
         data_paths: Tuple[Path, Path],
         model_builder: Callable,
         run_name: str,
-        hyperparams: Dict[str, Any]
+        hyperparams: Dict[str, Any],
+        clear_serialization_dir: bool = False
 ) -> Model:
     wbrun = wandb.init(
         project="oos-detect",
@@ -71,9 +73,8 @@ def run_training(
     # Locate serialization directory.
     serialization_dir = locate_results_dir()
 
-    if not serialization_dir:
-        log.info("Failed to locate results directory, stopping.")
-        return
+    if clear_serialization_dir:
+        empty_dir(serialization_dir)
 
     model, trainer = model_builder(
         serialization_dir,
