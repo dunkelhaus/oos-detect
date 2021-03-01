@@ -56,7 +56,8 @@ def train_test_pred(
         data_paths=train_paths,
         model_builder=builders,
         run_name=(model_name + "_" + set),
-        hyperparams=hyperparams
+        hyperparams=hyperparams,
+        clear_serialization_dir=True
     )
 
     if run_test:
