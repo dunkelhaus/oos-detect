@@ -7,15 +7,19 @@
 # logging.getLogger("transformers").setLevel(logging.DEBUG)
 
 # import wandb
-import pandas as pd
 from oos_detect.train.run import run_testing
 from oos_detect.train.run import run_training
-from oos_detect.train.metrics import get_metrics
 from oos_detect.train.predict import get_predictions
 from oos_detect.datasets.readers.oos_eval import OOSEvalReader
 from oos_detect.datasets.readers.oos_eval import oos_data_paths
-from oos_detect.models.bert_linear.builders import bert_linear_builders
-# from pseudo_ood_generation.components.ae.builders import pog_ae_builders
+
+# XXX: Used for testing bert_linear.
+# from oos_detect.models.bert_linear.builders import bert_linear_builders
+# from oos_detect.train.metrics import get_metrics
+# import pandas as pd
+
+# XXX: Used for testing AE.
+from pseudo_ood_generation.components.ae.builders import pog_ae_builders
 
 
 # Logger setup.
@@ -35,14 +39,14 @@ def train_test_pred(
         get_preds=False,
         set="full",
         model_name="dunkrun",
+        hyperparams={
+            "num_epochs": 3,
+            "batch_size": 64,
+            "lr": 0.0001,
+            "no_cuda": False,
+            "log_interval": 10
+        }
 ):
-    hyperparams = {
-        "num_epochs": 3,
-        "batch_size": 64,
-        "lr": 0.0001,
-        "no_cuda": False,
-        "log_interval": 10
-    }
     data_reader = OOSEvalReader()
     train_paths, test_path = oos_data_paths(set=set)
 
@@ -74,22 +78,33 @@ def train_test_pred(
     return
 
 
-actuals, predictions, labels = train_test_pred(
-    set="small",
-    model_name="bert_linear",
-    builders=bert_linear_builders,
-    run_test=True,
-    get_preds=True
-)
+# XXX: Used for testing bert_linear.
+# actuals, predictions, labels = train_test_pred(
+#     set="small",
+#     model_name="bert_linear",
+#     builders=bert_linear_builders,
+#     run_test=True,
+#     get_preds=True
+# )
 
 
-"""train_test_pred(
+# XXX: Used for testing AE.
+train_test_pred(
     set="small",
     model_name="pog_ae",
-    builders=pog_ae_builders
-)"""
-df = get_metrics(actuals, predictions, labels)
+    builders=pog_ae_builders,
+    hyperparams={
+        "num_epochs": 40,
+        "batch_size": 64,
+        "lr": 0.001,
+        "no_cuda": False,
+        "log_interval": 10
+    }
+)
 
-with pd.option_context('display.max_rows', None):
-    print("\n\n=====   Multiclass Classification Report   =====")
-    print(df)
+# XXX: Used only when running full classification network.
+# df = get_metrics(actuals, predictions, labels)
+
+# with pd.option_context('display.max_rows', None):
+#     print("\n\n=====   Multiclass Classification Report   =====")
+#     print(df)
