@@ -14,3 +14,13 @@ oos_detect/train/results/
 
 # WANDB
 wandb/
+
+# Local reproduction environment and generated artifacts.
+.venv/
+**/*.egg-info/
+runs/
+prepared/
+
+# Keep the Colab notebook and planning files out of publication.
+*.ipynb
+openspec/

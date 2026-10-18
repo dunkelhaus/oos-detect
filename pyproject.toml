@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "oos-detect"
+version = "0.1.0"
+description = "CUDA reproduction of CLINC pseudo-OOD generation experiments"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "torch==2.14.1+cu132",
+  "numpy>=2.2,<3",
+  "scikit-learn>=1.6,<2",
+  "pseudo-ood-generation==0.1.0",
+  "wgan-gp==0.1.0",
+]
+
+[dependency-groups]
+dev = ["pytest>=8,<10"]
+
+[project.scripts]
+oos-reproduce = "oos_detect.reproduce.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["oos_detect*"]
+exclude = ["oos_detect.models.pseudo-ood-generation*", "oos_detect.datasets.oos_eval*"]
+
+[tool.uv]
+environments = ["sys_platform == 'linux' and platform_machine == 'x86_64'"]
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu132" }
+pseudo-ood-generation = { path = "oos_detect/models/pseudo-ood-generation", editable = true }
+wgan-gp = { path = "oos_detect/models/pseudo-ood-generation/pseudo_ood_generation/components/wgan-gp", editable = true }
+
+[[tool.uv.index]]
+name = "pytorch-cu132"
+url = "https://download.pytorch.org/whl/cu132"
+explicit = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests/reproduction"]
+addopts = "-ra"
